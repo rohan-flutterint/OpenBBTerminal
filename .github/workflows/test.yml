@@ -37,27 +37,27 @@ jobs:
   #     - run: safety check
   #     - run: |
   #         pylint terminal.py gamestonk_terminal discordbot tests
-  test:
-    name: Base Tests - Ubuntu-latest - Python 3.9
-    needs: linting
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+  # test:
+  #   name: Base Tests - Ubuntu-latest - Python 3.9
+  #   needs: linting
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v2
 
-      - name: Setup Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.9"
-          architecture: x64
+  #     - name: Setup Python 3.9
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: "3.9"
+  #         architecture: x64
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.1.11
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+  #     - name: Install Poetry
+  #       uses: snok/install-poetry@v1
+  #       with:
+  #         version: 1.1.11
+  #         virtualenvs-create: true
+  #         virtualenvs-in-project: true
 
   #     - name: Load cached venv
   #       id: cached-poetry-dependencies
@@ -158,7 +158,7 @@ jobs:
   #         python terminal.py
   tests-conda:
     name: Anaconda Python Tests - (3.8, windows)
-    needs: test
+    # needs: test
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -173,23 +173,15 @@ jobs:
           git config --global core.autocrlf false
           git config --global core.eol lf
 
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v2
-        with:
-          # Need to fetch more than the last commit so that setuptools-scm can
-          # create the correct version string. If the number of commits since
-          # the last release is greater than this, the version still be wrong.
-          # Increase if necessary.
-          fetch-depth: 100
-          # The GitHub token is preserved by default but this job doesn't need
-          # to be able to push to GitHub.
-          persist-credentials: false
-
+  
       - name: Setup caching for conda packages
         uses: actions/cache@v2
         with:
           path: ~/conda_pkgs_dir
           key: conda-${{ runner.os }}-3.8-${{ hashFiles('build/conda/conda-3-8-env.yaml') }}
+          restore-keys: windows-conda
 
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v2
