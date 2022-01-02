@@ -8,9 +8,7 @@ on: [pull_request, push]
 jobs:
   tests-conda:
     name: Anaconda Python Tests - (${{ matrix.python-version }}, ${{ matrix.os }})
-    needs: test
     runs-on: ${{ matrix.os }}-latest
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       fail-fast: false
       matrix:
