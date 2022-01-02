@@ -23,8 +23,8 @@ jobs:
   #     - uses: actions/cache@v2
   #       with:
   #         path: ~/.cache/pip
-  #         key: ${{ runner.os }}-linting
-  #         restore-keys: ${{ runner.os }}-linting
+  #         key: windows-linting
+  #         restore-keys: windows-linting
 
   #     - run: pip install bandit black codespell flake8 mypy pyupgrade safety pylint==2.11.1
   #     - run: pip install types-pytz types-requests types-termcolor types-tabulate types-PyYAML types-python-dateutil
@@ -64,7 +64,7 @@ jobs:
   #       uses: actions/cache@v2
   #       with:
   #         path: .venv
-  #         key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+  #         key: venv-windows-${{ hashFiles('**/poetry.lock') }}
 
   #     - name: Install dependencies
   #       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
@@ -130,7 +130,7 @@ jobs:
   #       uses: actions/cache@v2
   #       with:
   #         path: .venv
-  #         key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+  #         key: venv-windows-${{ hashFiles('**/poetry.lock') }}
 
   #     - name: Install dependencies
   #       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
@@ -168,7 +168,6 @@ jobs:
       PYTHONNOUSERSITE: 1
     steps:
       - name: Set git to use LF
-        if: runner.os == 'Windows'
         run: |
           git config --global core.autocrlf false
           git config --global core.eol lf
@@ -180,7 +179,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/conda_pkgs_dir
-          key: conda-${{ runner.os }}-3.8-${{ hashFiles('build/conda/conda-3-8-env.yaml') }}
+          key: conda-windows-3.8-${{ hashFiles('build/conda/conda-3-8-env.yaml') }}
           restore-keys: windows-conda
 
       - name: Setup Miniconda
@@ -213,9 +212,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-3-8-pip-${{ hashFiles('requirements.txt') }}
+          key: windows-3-8-pip-${{ hashFiles('requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            windows-pip-
 
       - name: Install dependencies (Bash)
         shell: bash -l {0}
