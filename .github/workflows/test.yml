@@ -97,9 +97,9 @@ jobs:
   #       with:
   #         args: "./*.md ./changelogs/*.md ./gamestonk_terminal/**/*.md ./discordbot/**/*.md"
   # tests-python:
-  #   name: Vanilla Python Tests - (${{ matrix.python-version }}, ${{ matrix.os }})
+  #   name: Vanilla Python Tests - (${{ matrix.python-version }}, windows)
   #   needs: test
-  #   runs-on: ${{ matrix.os }}
+  #   runs-on: windows
   #   if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
   #   strategy:
   #     fail-fast: true
@@ -158,24 +158,14 @@ jobs:
   #         source $VENV
   #         python terminal.py
   tests-conda:
-    name: Anaconda Python Tests - (${{ matrix.python-version }}, ${{ matrix.os }})
+    name: Anaconda Python Tests - (3.8, windows)
     # needs: test
-    runs-on: ${{ matrix.os }}-latest
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: windows-latest
     strategy:
       fail-fast: false
-      matrix:
-        os: ['windows']
-        python-version: ['3.8']
-        dependencies: ['']
-        include:
-          - os: ubuntu
-            python: 3.8
-          - os: windows
-            python: 3.8
     env:
-      OS: ${{ matrix.os }}
-      PYTHON: ${{ matrix.python }}
+      OS: windows
+      PYTHON: 3.8
       PYTHONNOUSERSITE: 1
     steps:
       - name: Set git to use LF
@@ -200,12 +190,12 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/conda_pkgs_dir
-          key: conda-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('build/conda/conda-3-8-env.yaml') }}
+          key: conda-${{ runner.os }}-3.8-${{ hashFiles('build/conda/conda-3-8-env.yaml') }}
 
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: ${{ matrix.python }}
+          python-version: 3.8
           miniconda-version: "latest"
           auto-update-conda: true
           channels: conda-forge,defaults
