@@ -6,99 +6,99 @@ env:
   GTFF_ENABLE_QUICK_EXIT: true
 on: [pull_request, push]
 jobs:
-  # linting:
-  #   name: General Linting
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-  #   steps:
-  #     - name: Checkout Code
-  #       uses: actions/checkout@v2
+  linting:
+    name: General Linting
+    runs-on: ubuntu-latest
+    # if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
 
-  #     - name: Setup Python 3.9
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: "3.9"
-  #         architecture: x64
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+          architecture: x64
 
-  #     - uses: actions/cache@v2
-  #       with:
-  #         path: ~/.cache/pip
-  #         key: windows-linting
-  #         restore-keys: windows-linting
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-linting
+          restore-keys: ${{ runner.os }}-linting
 
-  #     - run: pip install bandit black codespell flake8 mypy pyupgrade safety pylint==2.11.1
-  #     - run: pip install types-pytz types-requests types-termcolor types-tabulate types-PyYAML types-python-dateutil
-  #     - run: bandit -x ./tests -r . || true
-  #     - run: black --check .
-  #     - run: codespell --ignore-words-list=ba,buil,coo,ether,hist,hsi,mape,navagation,operatio,pres,ser,yeld --quiet-level=2 --skip=./tests,.git,*.css,*.csv,*.html,*.ini,*.ipynb,*.js,*.json,*.lock,*.scss,*.txt,*.yaml
-  #     - run: flake8 . --count --ignore=E203,W503 --max-line-length=122 --show-source --statistics
-  #     - run: mypy --ignore-missing-imports --exclude="/setup\.py$" .
-  #     - run: shopt -s globstar && pyupgrade --py36-plus **/*.py
-  #     - run: safety check
-  #     - run: |
-  #         pylint terminal.py gamestonk_terminal discordbot tests
-  # test:
-  #   name: Base Tests - Ubuntu-latest - Python 3.9
-  #   needs: linting
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-  #   steps:
-  #     - name: Checkout Code
-  #       uses: actions/checkout@v2
+      - run: pip install bandit black codespell flake8 mypy pyupgrade safety pylint==2.11.1
+      - run: pip install types-pytz types-requests types-termcolor types-tabulate types-PyYAML types-python-dateutil
+      # - run: bandit -x ./tests -r . || true
+      # - run: black --check .
+      # - run: codespell --ignore-words-list=ba,buil,coo,ether,hist,hsi,mape,navagation,operatio,pres,ser,yeld --quiet-level=2 --skip=./tests,.git,*.css,*.csv,*.html,*.ini,*.ipynb,*.js,*.json,*.lock,*.scss,*.txt,*.yaml
+      # - run: flake8 . --count --ignore=E203,W503 --max-line-length=122 --show-source --statistics
+      # - run: mypy --ignore-missing-imports --exclude="/setup\.py$" .
+      # - run: shopt -s globstar && pyupgrade --py36-plus **/*.py
+      # - run: safety check
+      # - run: |
+      #     pylint terminal.py gamestonk_terminal discordbot tests
+  test:
+    name: Base Tests - Ubuntu-latest - Python 3.9
+    needs: linting
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
 
-  #     - name: Setup Python 3.9
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: "3.9"
-  #         architecture: x64
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+          architecture: x64
 
-  #     - name: Install Poetry
-  #       uses: snok/install-poetry@v1
-  #       with:
-  #         version: 1.1.11
-  #         virtualenvs-create: true
-  #         virtualenvs-in-project: true
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.1.11
+          virtualenvs-create: true
+          virtualenvs-in-project: true
 
-  #     - name: Load cached venv
-  #       id: cached-poetry-dependencies
-  #       uses: actions/cache@v2
-  #       with:
-  #         path: .venv
-  #         key: venv-windows-${{ hashFiles('**/poetry.lock') }}
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
-  #     - name: Install dependencies
-  #       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-  #       run: poetry install --no-interaction --no-root
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
 
-  #     - name: Install Package
-  #       run: poetry install --no-interaction
+      - name: Install Package
+        run: poetry install --no-interaction
 
-  #     - name: Run tests
-  #       env:
-  #         MPLBACKEND: Agg
-  #       run: |
-  #         source $VENV
-  #         pytest tests/
+      - name: Run tests
+        env:
+          MPLBACKEND: Agg
+        run: |
+          source $VENV
+          pytest tests/
 
-  #     - name: Start Terminal and exit
-  #       run: |
-  #         source $VENV
-  #         python terminal.py
-  # markdown-link-check:
-  #   name: Markdown Linting
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       name: Check out the code
-  #     - name: Lint Code Base
-  #       uses: docker://avtodev/markdown-lint:v1
-  #       with:
-  #         args: "./*.md ./changelogs/*.md ./gamestonk_terminal/**/*.md ./discordbot/**/*.md"
+      - name: Start Terminal and exit
+        run: |
+          source $VENV
+          python terminal.py
+  markdown-link-check:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - uses: actions/checkout@v2
+        name: Check out the code
+      - name: Lint Code Base
+        uses: docker://avtodev/markdown-lint:v1
+        with:
+          args: "./*.md ./changelogs/*.md ./gamestonk_terminal/**/*.md ./discordbot/**/*.md"
   # tests-python:
-  #   name: Vanilla Python Tests - (${{ matrix.python-version }}, windows)
+  #   name: Vanilla Python Tests - (${{ matrix.python-version }}, ${{ matrix.os }})
   #   needs: test
-  #   runs-on: windows
+  #   runs-on: ${{ matrix.os }}
   #   if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
   #   strategy:
   #     fail-fast: true
@@ -130,7 +130,7 @@ jobs:
   #       uses: actions/cache@v2
   #       with:
   #         path: .venv
-  #         key: venv-windows-${{ hashFiles('**/poetry.lock') }}
+  #         key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
   #     - name: Install dependencies
   #       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
@@ -157,35 +157,55 @@ jobs:
   #         source $VENV
   #         python terminal.py
   tests-conda:
-    name: Anaconda Python Tests - (3.8, windows)
-    # needs: test
-    runs-on: windows-latest
+    name: Anaconda Python Tests - (${{ matrix.python-version }}, ${{ matrix.os }})
+    needs: test
+    runs-on: ${{ matrix.os }}-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       fail-fast: false
+      matrix:
+        # os: ['ubuntu', 'windows']
+        os: ['windows']
+        python-version: ['3.8']
+        dependencies: ['']
+        include:
+          # - os: ubuntu
+          #   python: 3.8
+          - os: windows
+            python: 3.8
     env:
-      OS: windows
-      PYTHON: 3.8
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
       PYTHONNOUSERSITE: 1
     steps:
       - name: Set git to use LF
+        if: runner.os == 'Windows'
         run: |
           git config --global core.autocrlf false
           git config --global core.eol lf
 
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v2
-  
+        with:
+          # Need to fetch more than the last commit so that setuptools-scm can
+          # create the correct version string. If the number of commits since
+          # the last release is greater than this, the version still be wrong.
+          # Increase if necessary.
+          fetch-depth: 100
+          # The GitHub token is preserved by default but this job doesn't need
+          # to be able to push to GitHub.
+          persist-credentials: false
+
       - name: Setup caching for conda packages
         uses: actions/cache@v2
         with:
           path: ~/conda_pkgs_dir
-          key: conda-windows-3.8-${{ hashFiles('build/conda/conda-3-8-env.yaml') }}
-          restore-keys: windows-conda
+          key: conda-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('build/conda/conda-3-8-env.yaml') }}
 
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: 3.8
+          python-version: ${{ matrix.python }}
           miniconda-version: "latest"
           auto-update-conda: true
           channels: conda-forge,defaults
@@ -212,9 +232,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
-          key: windows-3-8-pip-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-3-8-pip-${{ hashFiles('requirements.txt') }}
           restore-keys: |
-            windows-pip-
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies (Bash)
         shell: bash -l {0}
