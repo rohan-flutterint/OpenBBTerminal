@@ -4,6 +4,7 @@ env:
   GTFF_USE_PROMPT_TOOLKIT: false
   GTFF_USE_ION: false
   GTFF_ENABLE_QUICK_EXIT: true
+  PYTHONNOUSERSITE: 1
 on: [pull_request, push]
 jobs:
   tests-conda:
