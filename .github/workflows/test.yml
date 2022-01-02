@@ -4,6 +4,7 @@ env:
   GTFF_USE_PROMPT_TOOLKIT: false
   GTFF_USE_ION: false
   GTFF_ENABLE_QUICK_EXIT: true
+  PYTHONNOUSERSITE: 1
 on: [pull_request, push]
 jobs:
   # linting:
@@ -164,7 +165,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu', 'windows']
+        os: ['windows']
         python-version: ['3.8']
         dependencies: ['']
         include:
