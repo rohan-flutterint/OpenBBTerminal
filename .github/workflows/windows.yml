@@ -5,15 +5,7 @@ env:
   GTFF_USE_ION: false
   GTFF_ENABLE_QUICK_EXIT: true
   PYTHONNOUSERSITE: 1
-on:
-  push:
-    branches:
-      - "main"
-  workflow_dispatch:
-    inputs:
-      comments:
-        required: true
-        description: 'Test scenario tags'
+on: [pull_request, push]
 jobs:
   windows-conda:
     name: Windows-latest, Conda-latest,  Python 3.8
