@@ -13,9 +13,6 @@ from gamestonk_terminal.stocks.options import payoff_controller
 # pylint: disable=W0603
 # pylint: disable=E1111
 
-
-pytest.skip(allow_module_level=True)
-
 EXPIRY_DATES = [
     "2022-01-07",
     "2022-01-14",
@@ -420,36 +417,36 @@ def test_call_func_expect_queue(expected_queue, func, mocker, queue):
             [],
             dict(),
         ),
-        (
-            "call_add",
-            [
-                "0",
-                "--put",
-                "--short",
-            ],
-            "",
-            [],
-            dict(),
-        ),
-        (
-            "call_rmv",
-            [
-                "0",
-                "--all",
-            ],
-            "",
-            [],
-            dict(),
-        ),
-        (
-            "call_rmv",
-            [
-                "0",
-            ],
-            "",
-            [],
-            dict(),
-        ),
+        # (
+        #     "call_add",
+        #     [
+        #         "0",
+        #         "--put",
+        #         "--short",
+        #     ],
+        #     "",
+        #     [],
+        #     dict(),
+        # ),
+        # (
+        #     "call_rmv",
+        #     [
+        #         "0",
+        #         "--all",
+        #     ],
+        #     "",
+        #     [],
+        #     dict(),
+        # ),
+        # (
+        #     "call_rmv",
+        #     [
+        #         "0",
+        #     ],
+        #     "",
+        #     [],
+        #     dict(),
+        # ),
         (
             "call_pick",
             ["--type=long"],
@@ -474,7 +471,7 @@ def test_call_func_expect_queue(expected_queue, func, mocker, queue):
         (
             "call_plot",
             [],
-            "",
+            "plot_payoff",
             [],
             dict(),
         ),

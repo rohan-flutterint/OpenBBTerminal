@@ -13,8 +13,6 @@ from gamestonk_terminal.stocks.options import options_controller
 # pylint: disable=W0603
 # pylint: disable=E1111
 
-pytest.skip(allow_module_level=True)
-
 EXPIRY_DATES = [
     "2022-01-07",
     "2022-01-14",
@@ -358,22 +356,30 @@ def test_call_func_expect_queue(expected_queue, func, mocker, queue):
     assert controller.queue == expected_queue
 
 
+@pytest.mark.skip
 @pytest.mark.vcr(record_mode="none")
 @pytest.mark.parametrize(
     "tested_func, other_args, mocked_func, called_args, called_kwargs",
     [
         (
             "call_calc",
-            ["--put", "--sell", "--strike=1", "--prenium=2", "--min=3", "--max=4"],
-            "",
+            [
+                "--put",
+                "--sell",
+                "--strike=1",
+                "--premium=2",
+                "--min=3",
+                "--max=4",
+            ],
+            "calculator_view.view_calculator",
             [],
             dict(
-                strike=1,
-                premium=2,
+                strike=1.0,
+                premium=2.0,
                 put=True,
                 sell=True,
-                min=3,
-                max=4,
+                x_min=3.0,
+                x_max=4.0,
             ),
         ),
         (
@@ -569,22 +575,22 @@ def test_call_func_expect_queue(expected_queue, func, mocker, queue):
         #         chain_id="MOCK_CHAIN_ID",
         #     ),
         # ),
-        (
-            # DISPLAYS : "No correct strike input\n"
-            "call_hist",
-            [
-                "1",
-                "--put",
-                "--chain=MOCK_CHAIN_ID",
-                "--raw",
-                "--source=ce",
-                "--limit=2",
-                "--export=csv",
-            ],
-            "",
-            [],
-            dict(),
-        ),
+        # (
+        #     # DISPLAYS : "No correct strike input\n"
+        #     "call_hist",
+        #     [
+        #         "1",
+        #         "--put",
+        #         "--chain=MOCK_CHAIN_ID",
+        #         "--raw",
+        #         "--source=ce",
+        #         "--limit=2",
+        #         "--export=csv",
+        #     ],
+        #     "",
+        #     [],
+        #     dict(),
+        # ),
         (
             "call_chains",
             [

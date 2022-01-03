@@ -12,8 +12,6 @@ from gamestonk_terminal.stocks.options import screener_controller
 # pylint: disable=W0603
 # pylint: disable=E1111
 
-pytest.skip(allow_module_level=True)
-
 PRICES = pd.DataFrame(data={"Price": [11.0, 12.0], "Chance": [0.2, 0.8]})
 
 
@@ -195,7 +193,7 @@ def test_call_cls(mocker):
         ),
     ],
 )
-def test_call_func_expect_queue(expected_queue, func, mocker, queue):
+def test_call_func_expect_queue(expected_queue, func, queue):
     controller = screener_controller.ScreenerController(queue=queue)
     result = getattr(controller, func)([])
 
