@@ -381,6 +381,8 @@ main:
       - name: backtesting
         ref: "/stocks/backtesting"
         sub:
+          - name: whatif
+            ref: "/stocks/backtesting/whatif"
           - name: ema
             ref: "/stocks/backtesting/ema"
           - name: ema_cross
@@ -766,6 +768,8 @@ main:
         sub:
           - name: gwei
             ref: "/cryptocurrency/onchain/gwei"
+          - name: hr
+            ref: "/cryptocurrency/onchain/hr"
           - name: address
             ref: "/cryptocurrency/onchain/address"
           - name: balance
@@ -911,7 +915,7 @@ main:
         ref: "/economy/fred"
         sub:
           - name: search
-            ref : "/economy/fred/search"
+            ref: "/economy/fred/search"
           - name: add
             ref: "/economy/fred/add"
           - name: rmv
@@ -941,6 +945,23 @@ main:
         ref: "/etf/pir"
       - name: fds
         ref: "/etf/fds"
+  - name: funds
+    ref: "/funds"
+    sub:
+      - name: search
+        ref: "/funds/search"
+      - name: country
+        ref: "/funds/country"
+      - name: info
+        ref: "/funds/info"
+      - name: load
+        ref: "/funds/load"
+      - name: overview
+        ref: "/funds/overview"
+      - name: plot
+        ref: "/funds/plot"
+      - name: sector
+        ref: "/funds/sector"
   - name: portfolio
     ref: "/portfolio"
     sub:
