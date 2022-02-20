@@ -6,6 +6,8 @@ from pathlib import Path
 import sys
 import time
 import uuid
+import socket
+from logging.handlers import SysLogHandler
 
 import git
 
@@ -15,6 +17,14 @@ logger = logging.getLogger(__name__)
 LOGFORMAT = "%(asctime)s|%(name)s|%(funcName)s|%(lineno)s|%(message)s"
 LOGPREFIXFORMAT = "%(levelname)s|%(version)s|%(loggingId)s|%(sessionId)s|"
 DATEFORMAT = "%Y-%m-%dT%H:%M:%S%z"
+
+
+class ContextFilter(logging.Filter):
+    hostname = socket.gethostname()
+
+    def filter(self, record):
+        record.hostname = ContextFilter.hostname
+        return True
 
 
 def library_loggers(verbosity: int = 0) -> None:
@@ -62,27 +72,14 @@ def setup_file_logger(session_id: str) -> None:
 
     logger.debug("Log id: %s", cfg.LOGGING_ID)
 
-    uuid_log_dir = log_dir.absolute().joinpath(cfg.LOGGING_ID)
+    syslog = SysLogHandler(address=("logs4.papertrailapp.com", 21049))
+    syslog.addFilter(ContextFilter())
 
-    logger.debug("Current log dir: %s", uuid_log_dir)
-
-    if not os.path.isdir(uuid_log_dir.absolute()):
-        logger.debug(
-            "UUID log dir does not exist: %s. Creating.", uuid_log_dir.absolute()
-        )
-        os.mkdir(uuid_log_dir.absolute())
-
-    start_time = int(time.time())
-    cfg.LOGGING_FILE = uuid_log_dir.absolute().joinpath(f"{start_time}.log")  # type: ignore
-
-    logger.debug("Current log file: %s", cfg.LOGGING_FILE)
-
-    handler = logging.FileHandler(cfg.LOGGING_FILE)
     formatter = CustomFormatterWithExceptions(
         cfg.LOGGING_ID, session_id, fmt=LOGFORMAT, datefmt=DATEFORMAT
     )
-    handler.setFormatter(formatter)
-    logging.getLogger().addHandler(handler)
+    syslog.setFormatter(formatter)
+    logging.getLogger().addHandler(syslog)
 
 
 class CustomFormatterWithExceptions(logging.Formatter):
