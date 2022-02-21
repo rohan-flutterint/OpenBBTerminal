@@ -98,7 +98,7 @@ def setup_file_logger(session_id: str) -> None:
 def log_logsize():
     syslog = SysLogHandler(address=("logs4.papertrailapp.com", 21049))
     syslog.addFilter(ContextFilter())
-    formating = "%(asctime)s %(message)s"
+    formatting = "%(asctime)s %(message)s"
     formatter = logging.Formatter(formatting, datefmt="%b %d %H:%M:%S")
     syslog.setFormatter(formatter)
     logging.getLogger().addHandler(syslog)
