@@ -72,14 +72,38 @@ def setup_file_logger(session_id: str) -> None:
 
     logger.debug("Log id: %s", cfg.LOGGING_ID)
 
-    syslog = SysLogHandler(address=("logs4.papertrailapp.com", 21049))
-    syslog.addFilter(ContextFilter())
+    uuid_log_dir = log_dir.absolute().joinpath(cfg.LOGGING_ID)
 
+    logger.debug("Current log dir: %s", uuid_log_dir)
+
+    if not os.path.isdir(uuid_log_dir.absolute()):
+        logger.debug(
+            "UUID log dir does not exist: %s. Creating.", uuid_log_dir.absolute()
+        )
+        os.mkdir(uuid_log_dir.absolute())
+
+    start_time = int(time.time())
+    cfg.LOGGING_FILE = uuid_log_dir.absolute().joinpath(f"{start_time}.log")  # type: ignore
+
+    logger.debug("Current log file: %s", cfg.LOGGING_FILE)
+
+    handler = logging.FileHandler(cfg.LOGGING_FILE)
     formatter = CustomFormatterWithExceptions(
         cfg.LOGGING_ID, session_id, fmt=LOGFORMAT, datefmt=DATEFORMAT
     )
+    handler.setFormatter(formatter)
+    logging.getLogger().addHandler(handler)
+
+
+def log_logsize():
+    syslog = SysLogHandler(address=("logs4.papertrailapp.com", 21049))
+    syslog.addFilter(ContextFilter())
+    formating = "%(asctime)s %(message)s"
+    formatter = logging.Formatter(formatting, datefmt="%b %d %H:%M:%S")
     syslog.setFormatter(formatter)
     logging.getLogger().addHandler(syslog)
+    size = os.path.getsize(cfg.LOGGING_FILE)
+    logger.info("%s LOGSIZE: %s", cfg.LOGGING_ID, str(size))
 
 
 class CustomFormatterWithExceptions(logging.Formatter):
