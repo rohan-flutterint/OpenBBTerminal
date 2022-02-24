@@ -22,7 +22,7 @@ from gamestonk_terminal.helper_funcs import (
     replace_user_timezone,
 )
 
-from gamestonk_terminal.loggers import setup_logging, log_logsize
+from gamestonk_terminal.loggers import setup_logging
 from gamestonk_terminal.menu import session
 
 from gamestonk_terminal.terminal_helper import (
@@ -251,7 +251,6 @@ def terminal(jobs_cmds: List[str] = None):
             # If the command is quitting the menu we want to return in here
             if t_controller.queue[0] in ("q", "..", "quit"):
                 print_goodbye()
-                log_logsize()
                 break
 
             if gtff.ENABLE_EXIT_AUTO_HELP and len(t_controller.queue) > 1:
@@ -277,7 +276,6 @@ def terminal(jobs_cmds: List[str] = None):
                     )
                 except KeyboardInterrupt:
                     print_goodbye()
-                    log_logsize()
                     break
             # Get input from user without auto-completion
             else:
@@ -288,7 +286,6 @@ def terminal(jobs_cmds: List[str] = None):
             t_controller.queue = t_controller.switch(an_input)
             if an_input in ("q", "quit", "..", "exit"):
                 print_goodbye()
-                log_logsize()
                 break
 
             # Check if the user wants to reset application

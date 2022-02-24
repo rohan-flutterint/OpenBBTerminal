@@ -86,6 +86,7 @@ def setup_file_logger(session_id: str) -> None:
     start_time = int(time.time())
     cfg.LOGGING_FILE = uuid_log_dir.absolute().joinpath(f"{start_time}.log")  # type: ignore
 
+    log_past_logsize()
     with open(uuid_log_dir.absolute().joinpath("latest_log.txt"), "w") as latest_log:
         latest_log.write(str(start_time))
 
@@ -99,7 +100,7 @@ def setup_file_logger(session_id: str) -> None:
     logging.getLogger().addHandler(handler)
 
 
-def log_logsize():
+def log_past_logsize():
     syslog = None
     try:
         syslog = SysLogHandler(address=("logs4.papertrailapp.com", 21049))
@@ -121,6 +122,7 @@ def log_logsize():
         logging.getLogger().addHandler(syslog)
         size = os.path.getsize(log_file) if log_file else "0"
         logger.info("%s|%s|%s", cfg.LOGGING_ID, session_id, str(size))
+        logging.getLogger().removeHandler(syslog)
 
 
 class CustomFormatterWithExceptions(logging.Formatter):
