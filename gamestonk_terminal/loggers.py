@@ -1,5 +1,6 @@
 """Logging Configuration"""
 __docformat__ = "numpy"
+from cmath import log
 import logging
 import os
 from pathlib import Path
@@ -85,6 +86,9 @@ def setup_file_logger(session_id: str) -> None:
     start_time = int(time.time())
     cfg.LOGGING_FILE = uuid_log_dir.absolute().joinpath(f"{start_time}.log")  # type: ignore
 
+    with open(uuid_log_dir.absolute().joinpath("latest_log.txt"), "w") as latest_log:
+        latest_log.write(str(start_time))
+
     logger.debug("Current log file: %s", cfg.LOGGING_FILE)
 
     handler = logging.FileHandler(cfg.LOGGING_FILE)
@@ -96,14 +100,27 @@ def setup_file_logger(session_id: str) -> None:
 
 
 def log_logsize():
-    syslog = SysLogHandler(address=("logs4.papertrailapp.com", 21049))
-    syslog.addFilter(ContextFilter())
-    formatting = "%(asctime)s %(message)s"
-    formatter = logging.Formatter(formatting, datefmt="%b %d %H:%M:%S")
-    syslog.setFormatter(formatter)
-    logging.getLogger().addHandler(syslog)
-    size = os.path.getsize(cfg.LOGGING_FILE)
-    logger.info("%s LOGSIZE: %s", cfg.LOGGING_ID, str(size))
+    syslog = None
+    try:
+        syslog = SysLogHandler(address=("logs4.papertrailapp.com", 21049))
+    except Exception:
+        logger.exception("Cannot connect to Papertrail")
+
+    logging_folder = Path(os.path.dirname(cfg.LOGGING_FILE))
+    latest_log_file = logging_folder.joinpath("latest_log.txt")
+    if os.path.isfile(latest_log_file) and syslog is not None:
+        log_file = ""
+        session_id = ""
+        with open(latest_log_file, "r") as f:
+            session_id = str(f.read())
+            log_file = logging_folder.joinpath(f"{session_id}.log")
+        syslog.addFilter(ContextFilter())
+        formatting = "%(asctime)s|%(message)s"
+        formatter = logging.Formatter(formatting, datefmt="%b %d %H:%M:%S%z")
+        syslog.setFormatter(formatter)
+        logging.getLogger().addHandler(syslog)
+        size = os.path.getsize(log_file) if log_file else "0"
+        logger.info("%s|%s|%s", cfg.LOGGING_ID, session_id, str(size))
 
 
 class CustomFormatterWithExceptions(logging.Formatter):
