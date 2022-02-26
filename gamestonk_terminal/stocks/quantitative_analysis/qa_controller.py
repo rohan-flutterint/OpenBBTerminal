@@ -56,6 +56,7 @@ class QaController(StockBaseController):
         "capm",
         "var",
         "es",
+        "om",
     ]
 
     stock_interval = [1, 5, 15, 30, 60]
@@ -793,6 +794,7 @@ class QaController(StockBaseController):
                     False,
                 )
 
+    @log_start_end(log=logger)
     def call_es(self, other_args: List[str]):
         """Process es command"""
         parser = argparse.ArgumentParser(
@@ -842,4 +844,47 @@ class QaController(StockBaseController):
                 ns_parser.distributions,
                 ns_parser.percentile / 100,
                 False,
+            )
+
+    @log_start_end(log=logger)
+    def call_om(self, other_args: List[str]):
+        """Process omega command"""
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="om",
+            description="""
+                Provides omega ratio of the selected stock.
+            """,
+        )
+        parser.add_argument(
+            "-s",
+            "--start",
+            action="store",
+            dest="start",
+            type=float,
+            default=0,
+            help="""
+                Start of the omega ratio threshold
+            """,
+        )
+        parser.add_argument(
+            "-e",
+            "--end",
+            action="store",
+            dest="end",
+            type=float,
+            default=1.5,
+            help="""
+                End of the omega ratio threshold
+            """,
+        )
+
+        ns_parser = parse_known_args_and_warn(parser, other_args)
+        if ns_parser:
+            data = self.stock["returns"]
+            qa_view.display_omega(
+                data,
+                ns_parser.start,
+                ns_parser.end,
             )
