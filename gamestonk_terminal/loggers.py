@@ -7,15 +7,22 @@ import sys
 import time
 import uuid
 from math import floor, ceil
+import yaml
 
 import git
 
 import gamestonk_terminal.config_terminal as cfg
+from gamestonk_terminal.rich_config import console
+
 
 logger = logging.getLogger(__name__)
+
 LOGFORMAT = "%(asctime)s|%(name)s|%(funcName)s|%(lineno)s|%(message)s"
 LOGPREFIXFORMAT = "%(levelname)s|%(version)s|%(loggingId)s|%(sessionId)s|"
 DATEFORMAT = "%Y-%m-%dT%H:%M:%S%z"
+
+OBJECTION_CLAUSE = "'I object the log collection.'"
+LOG_COLLECTION_KEY = "log_collection"
 
 
 def library_loggers(verbosity: int = 0) -> None:
@@ -29,6 +36,50 @@ def library_loggers(verbosity: int = 0) -> None:
 
     logging.getLogger("requests").setLevel(verbosity)
     logging.getLogger("urllib3").setLevel(verbosity)
+
+
+def collection_settings() -> bool:
+    def str_replacements(input_str: str) -> str:
+        return input_str.replace(".", "").replace("'", "").replace('"', "").lower()
+
+    log_collection_settings_file = (
+        Path(__file__).parent.absolute().joinpath("log_collection_settings.yaml")
+    )
+
+    if os.path.isfile(log_collection_settings_file):
+        with open(log_collection_settings_file) as settings:
+            try:
+                log_collection_settings = yaml.safe_load(settings)
+            except yaml.YAMLError as e:
+                log_collection_settings = {}
+                logger.exception(str(e))
+        if LOG_COLLECTION_KEY not in log_collection_settings:
+            os.remove(log_collection_settings_file)
+
+    if not os.path.isfile(log_collection_settings_file):
+        console.print(
+            "Log collection settings have not been set:\nTo improve your experience and fix bugs faster we collect logs."
+            "\nThese logs do not contain any personal identifiable information.\nThis means you remain anonymous."
+        )
+        user_input = str_replacements(
+            input(
+                f"If this is fine, press enter. If you object, please type {OBJECTION_CLAUSE} and press enter\n"
+            )
+        )
+
+        console.print(
+            f"To change this later you can delete the file '{log_collection_settings_file}'"
+        )
+        time.sleep(3)
+
+        log_collection_settings = {}
+        log_collection_settings[LOG_COLLECTION_KEY] = user_input != str_replacements(
+            OBJECTION_CLAUSE
+        )
+
+        with open(log_collection_settings_file, "w") as outfile:
+            yaml.dump(log_collection_settings, outfile)
+    return log_collection_settings[LOG_COLLECTION_KEY]
 
 
 def setup_file_logger(session_id: str) -> None:
@@ -176,7 +227,7 @@ def setup_logging() -> None:
     logging.basicConfig(
         level=verbosity_terminal, format=LOGFORMAT, datefmt=DATEFORMAT, handlers=[]
     )
-
+    console.print(collection_settings())
     get_commit_hash()
 
     for a_handler in cfg.LOGGING_HANDLERS.split(","):
