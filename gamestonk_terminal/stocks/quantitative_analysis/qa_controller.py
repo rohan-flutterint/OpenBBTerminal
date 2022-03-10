@@ -56,6 +56,7 @@ class QaController(StockBaseController):
         "capm",
         "var",
         "es",
+        "so",
         "om",
     ]
 
@@ -847,8 +848,51 @@ class QaController(StockBaseController):
             )
 
     @log_start_end(log=logger)
+    def call_so(self, other_args: List[str]):
+        """Process so command"""
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="so",
+            description="""
+                Provides the sortino ratio of the selected stock.
+            """,
+        )
+        parser.add_argument(
+            "-t",
+            "--target",
+            action="store",
+            dest="target_return",
+            type=float,
+            default=0,
+            help="Target return",
+        )
+        parser.add_argument(
+            "-a",
+            "--adjusted",
+            action="store_true",
+            default=False,
+            dest="adjusted",
+            help="If one should adjust the sortino ratio inorder to make it comparable to the sharpe ratio",
+        )
+        parser.add_argument(
+            "-p",
+            "--period",
+            action="store",
+            dest="period",
+            type=float,
+            default=len(self.stock["returns"]),
+            help="Period of data to use",
+        )
+
+        ns_parser = parse_known_args_and_warn(parser, other_args)
+        if ns_parser:
+            data = self.stock["returns"]
+            qa_view.display_sortino(data, ns_parser.target_return, ns_parser.adjusted, ns_parser.period)
+
+    @log_start_end(log=logger)
     def call_om(self, other_args: List[str]):
-        """Process omega command"""
+        """Process om command"""
         parser = argparse.ArgumentParser(
             add_help=False,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
