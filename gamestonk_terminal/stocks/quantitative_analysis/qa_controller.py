@@ -136,6 +136,8 @@ class QaController(StockBaseController):
 [info]Risk:[/info]
     var         display value at risk
     es          display expected shortfall
+    so          display sortino ratio
+    om          display omega ratio
 [info]Other:[/info]
     raw         print raw data
     decompose   decomposition in cyclic-trend, season, and residuals of prices
