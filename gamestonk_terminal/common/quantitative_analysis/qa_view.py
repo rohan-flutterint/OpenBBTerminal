@@ -1098,7 +1098,9 @@ def display_sharpe(data: pd.DataFrame, rfr: float, window: float):
     theme.visualize_output()
 
 
-def display_sortino(data: pd.DataFrame, target_return: float, window: float, adjusted: bool):
+def display_sortino(
+    data: pd.DataFrame, target_return: float, window: float, adjusted: bool
+):
     """Displays the sortino ratio
 
     Parameters
@@ -1129,7 +1131,9 @@ def display_sortino(data: pd.DataFrame, target_return: float, window: float, adj
     theme.visualize_output()
 
 
-def display_omega(data: pd.DataFrame, threshold_start: float = 0, threshold_end: float = 1.5):
+def display_omega(
+    data: pd.DataFrame, threshold_start: float = 0, threshold_end: float = 1.5
+):
     """Displays the omega ratio
 
     Parameters
