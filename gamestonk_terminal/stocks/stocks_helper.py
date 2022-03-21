@@ -3,11 +3,12 @@ __docformat__ = "numpy"
 
 import argparse
 import json
+import logging
+import os
 from datetime import datetime, timedelta
 from typing import List, Union, Optional, Iterable
 
 import matplotlib.pyplot as plt
-import matplotlib
 from matplotlib.lines import Line2D
 import mplfinance as mpf
 import numpy as np
@@ -30,11 +31,12 @@ from gamestonk_terminal.helper_funcs import (
     plot_autoscale,
     get_user_timezone_or_invalid,
     print_rich_table,
-    lambda_long_number_format,
 )
 from gamestonk_terminal.rich_config import console
 
-# pylint: disable=no-member,too-many-branches,C0302
+logger = logging.getLogger(__name__)
+
+# pylint: disable=no-member,too-many-branches,C0302,R0913
 
 INTERVALS = [1, 5, 15, 30, 60]
 SOURCES = ["yf", "av", "iex"]
@@ -92,6 +94,8 @@ def load(
     prepost: bool = False,
     source: str = "yf",
     iexrange: str = "ytd",
+    weekly: bool = False,
+    monthly: bool = False,
 ):
     """
     Load a symbol to perform analysis using the string above as a template. Optional arguments and their
@@ -133,6 +137,10 @@ def load(
         Source of data extracted
     iexrange: str
         Timeframe to get IEX data.
+    weekly: bool
+        Flag to get weekly data
+    monthly: bool
+        Flag to get monthly data
 
     Returns
     -------
@@ -145,11 +153,15 @@ def load(
 
         # Alpha Vantage Source
         if source == "av":
-            ts = TimeSeries(key=cfg.API_KEY_ALPHAVANTAGE, output_format="pandas")
-            # pylint: disable=unbalanced-tuple-unpacking
-            df_stock_candidate, _ = ts.get_daily_adjusted(
-                symbol=ticker, outputsize="full"
-            )
+            try:
+                ts = TimeSeries(key=cfg.API_KEY_ALPHAVANTAGE, output_format="pandas")
+                # pylint: disable=unbalanced-tuple-unpacking
+                df_stock_candidate, _ = ts.get_daily_adjusted(
+                    symbol=ticker, outputsize="full"
+                )
+            except Exception as e:
+                console.print(e)
+                return pd.DataFrame()
 
             df_stock_candidate.columns = [
                 val.split(". ")[1].capitalize() for val in df_stock_candidate.columns
@@ -164,7 +176,7 @@ def load(
             # Check that loading a stock was not successful
             # pylint: disable=no-member
             if df_stock_candidate.empty:
-                console.print("")
+                console.print("No data found.\n")
                 return pd.DataFrame()
 
             df_stock_candidate.index = df_stock_candidate.index.tz_localize(None)
@@ -180,12 +192,21 @@ def load(
 
         # Yahoo Finance Source
         elif source == "yf":
+
+            # TODO: Better handling of interval with week/month
+            int_ = "1d"
+            int_string = "Daily"
+            if weekly:
+                int_ = "1wk"
+                int_string = "Weekly"
+            if monthly:
+                int_ = "1mo"
+                int_string = "Monthly"
+
+            # Adding a dropna for weekly and monthly because these include weird NaN columns.
             df_stock_candidate = yf.download(
-                ticker,
-                start=start,
-                end=end,
-                progress=False,
-            )
+                ticker, start=start, end=end, progress=False, interval=int_
+            ).dropna(axis=0)
 
             # Check that loading a stock was not successful
             if df_stock_candidate.empty:
@@ -196,14 +217,24 @@ def load(
 
         # IEX Cloud Source
         elif source == "iex":
-            client = pyEX.Client(api_token=cfg.API_IEX_TOKEN, version="v1")
 
-            df_stock_candidate = client.chartDF(ticker, timeframe=iexrange)
+            df_stock_candidate = pd.DataFrame()
 
-            # Check that loading a stock was not successful
-            if df_stock_candidate.empty:
-                console.print("")
-                return pd.DataFrame()
+            try:
+                client = pyEX.Client(api_token=cfg.API_IEX_TOKEN, version="v1")
+
+                df_stock_candidate = client.chartDF(ticker, timeframe=iexrange)
+
+                # Check that loading a stock was not successful
+                if df_stock_candidate.empty:
+                    console.print("No data found.\n")
+            except Exception as e:
+                if "The API key provided is not valid" in str(e):
+                    console.print("[red]Invalid API Key[/red]\n")
+                else:
+                    console.print(e)
+
+                return df_stock_candidate
 
             df_stock_candidate = df_stock_candidate[
                 ["close", "fHigh", "fLow", "fOpen", "fClose", "volume"]
@@ -222,6 +253,7 @@ def load(
             df_stock_candidate.sort_index(ascending=True, inplace=True)
         s_start = df_stock_candidate.index[0]
         s_interval = f"{interval}min"
+        int_string = "Daily" if interval == 1440 else "Intraday"
 
     else:
 
@@ -254,7 +286,8 @@ def load(
 
         df_stock_candidate.index.name = "date"
 
-    s_intraday = (f"Intraday {s_interval}", "Daily")[interval == 1440]
+        int_string = "Intraday"
+    s_intraday = (f"Intraday {s_interval}", int_string)[interval == 1440]
 
     console.print(
         f"\nLoading {s_intraday} {ticker.upper()} stock "
@@ -288,7 +321,7 @@ def display_candle(
         Flag for intraday data for plotly range breaks
     add_trend: bool
         Flag to add high and low trends to chart
-    mov_avg: Tuple[int]
+    ma: Tuple[int]
         Moving averages to add to the candle
     asset_type_: str
         String to include in title
@@ -348,12 +381,6 @@ def display_candle(
             candle_chart_kwargs["figsize"] = plot_autoscale()
             fig, ax = mpf.plot(df_stock, **candle_chart_kwargs, **kwargs)
 
-            ax[2].get_yaxis().set_major_formatter(
-                matplotlib.ticker.FuncFormatter(
-                    lambda x, _: lambda_long_number_format(x)
-                )
-            )
-
             fig.suptitle(
                 f"{asset_type} {s_ticker}",
                 x=0.055,
@@ -375,6 +402,7 @@ def display_candle(
             theme.visualize_output(force_tight_layout=False)
         else:
             if len(external_axes) != 1:
+                logger.error("Expected list of one axis item.")
                 console.print("[red]Expected list of 1 axis items./n[/red]")
                 return
             (ax1,) = external_axes
@@ -530,7 +558,6 @@ def display_candle(
             )
 
         fig.show(config=dict({"scrollZoom": True}))
-    console.print("")
 
 
 def quote(other_args: List[str], s_ticker: str):
@@ -643,6 +670,7 @@ def quote(other_args: List[str], s_ticker: str):
         print_rich_table(quote_data, title="Ticker Quote", show_index=True)
 
     except KeyError:
+        logger.exception("Invalid stock ticker")
         console.print(f"Invalid stock ticker: {ns_parser.s_ticker}")
 
     console.print("")
@@ -868,3 +896,79 @@ def additional_info_about_ticker(ticker: str) -> str:
         extra_info += "\n[param]Currency: [/param]"
 
     return extra_info + "\n"
+
+
+def clean_fraction(num, denom):
+    """Returns the decimal value or NA if the operation cannot be performed
+
+    Parameters
+    ----------
+    num : Any
+        The numerator for the fraction
+    denom : Any
+        The denominator for the fraction
+
+    Returns
+    ----------
+    val : Any
+        The value of the fraction
+    """
+    try:
+        return num / denom
+    except TypeError:
+        return "N/A"
+
+
+def load_custom(file_path: str) -> pd.DataFrame:
+    """Loads in a custom csv file
+
+    Parameters
+    ----------
+    file_path: str
+        Path to file
+
+    Returns
+    -------
+    pd.DataFrame:
+        Dataframe of stock data
+    """
+    # Double check that the file exists
+    if not os.path.exists(file_path):
+        console.print("[red]File path does not exist.[/red]\n")
+        return pd.DataFrame()
+
+    df = pd.read_csv(file_path)
+    console.print(f"Loaded data has columns: {', '.join(df.columns.to_list())}\n")
+
+    # Nasdaq specific
+    if "Close/Last" in df.columns:
+        df = df.rename(columns={"Close/Last": "Close"})
+    if "Last" in df.columns:
+        df = df.rename(columns={"Last": "Close"})
+
+    df.columns = [col.lower().rstrip().lstrip() for col in df.columns]
+
+    for col in df.columns:
+        if col in ["date", "time", "timestamp", "datetime"]:
+            df[col] = pd.to_datetime(df[col])
+            df = df.set_index(col)
+            console.print(f"Column [blue]{col.title()}[/blue] set as index.")
+
+    df.columns = [col.title() for col in df.columns]
+    df.index.name = df.index.name.title()
+
+    df = df.applymap(
+        lambda x: clean_function(x) if not isinstance(x, (int, float)) else x
+    )
+    if "Adj Close" not in df.columns:
+        df["Adj Close"] = df.Close.copy()
+
+    return df
+
+
+def clean_function(entry: str) -> Union[str, float]:
+    """Helper function for cleaning stock data from csv.  This can be customized for csvs"""
+    # If there is a digit, get rid of common characters and return float
+    if any(char.isdigit() for char in entry):
+        return float(entry.replace("$", "").replace(",", ""))
+    return entry

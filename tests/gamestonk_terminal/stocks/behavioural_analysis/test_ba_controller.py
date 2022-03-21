@@ -159,7 +159,7 @@ def test_print_help():
         ("help/help", ["help", "help"]),
         ("q", ["quit"]),
         ("h", []),
-        ("r", ["quit", "quit", "reset", "stocks", "ba"]),
+        ("r", ["quit", "quit", "reset", "stocks", "ba", "load TSLA"]),
     ],
 )
 def test_switch(an_input, expected_queue):
@@ -207,12 +207,12 @@ def test_call_cls(mocker):
         (
             "call_reset",
             [],
-            ["quit", "quit", "reset", "stocks", "ba"],
+            ["quit", "quit", "reset", "stocks", "ba", "load TSLA"],
         ),
         (
             "call_reset",
             ["help"],
-            ["quit", "quit", "reset", "stocks", "ba", "help"],
+            ["quit", "quit", "reset", "stocks", "ba", "load TSLA", "help"],
         ),
     ],
 )
@@ -390,16 +390,6 @@ def test_call_func_expect_queue(expected_queue, queue, func):
             ),
         ),
         (
-            "call_stats",
-            ["--export=csv"],
-            "finnhub_view.display_sentiment_stats",
-            [],
-            dict(
-                ticker="MOCK_TICKER",
-                export="csv",
-            ),
-        ),
-        (
             "call_hist",
             [
                 "--start=2020-12-01",
@@ -515,7 +505,7 @@ def test_call_func(
         "call_queries",
         "call_rise",
         "call_headlines",
-        "call_stats",
+        "call_snews",
         "call_hist",
         "call_trend",
         "call_popular",
@@ -543,7 +533,6 @@ def test_call_func_no_parser(func, mocker):
     "func",
     [
         "call_hist",
-        "call_stats",
         "call_headlines",
         "call_sentiment",
         "call_infer",

@@ -10,9 +10,11 @@ from typing import List
 import yfinance as yf
 from prompt_toolkit.completion import NestedCompleter
 
+from gamestonk_terminal.decorators import check_api_key
 from gamestonk_terminal import feature_flags as gtff
 from gamestonk_terminal.decorators import log_start_end
 from gamestonk_terminal.helper_funcs import (
+    EXPORT_BOTH_RAW_DATA_AND_FIGURES,
     EXPORT_ONLY_RAW_DATA_ALLOWED,
     check_non_negative,
     check_positive,
@@ -297,6 +299,7 @@ class ComparisonAnalysisController(BaseController):
                 )
 
     @log_start_end(log=logger)
+    @check_api_key(["API_POLYGON_KEY"])
     def call_getpoly(self, other_args: List[str]):
         """Process get command"""
         parser = argparse.ArgumentParser(
@@ -324,6 +327,7 @@ class ComparisonAnalysisController(BaseController):
         if other_args and "-" not in other_args[0][0]:
             other_args.insert(0, "-l")
         ns_parser = parse_known_args_and_warn(parser, other_args)
+
         if ns_parser:
             if self.ticker:
                 self.similar, self.user = polygon_model.get_similar_companies(
@@ -340,9 +344,8 @@ class ComparisonAnalysisController(BaseController):
                         f"The limit of stocks to compare are {ns_parser.limit}. The subsample will occur randomly.\n",
                     )
 
-                self.similar = [self.ticker] + self.similar
-
                 if self.similar:
+                    self.similar = [self.ticker] + self.similar
                     console.print(
                         f"[{self.user}] Similar Companies: {', '.join(self.similar)}",
                         "\n",
@@ -354,6 +357,7 @@ class ComparisonAnalysisController(BaseController):
                 )
 
     @log_start_end(log=logger)
+    @check_api_key(["API_FINNHUB_KEY"])
     def call_getfinnhub(self, other_args: List[str]):
         """Process get command"""
         parser = argparse.ArgumentParser(
@@ -389,9 +393,9 @@ class ComparisonAnalysisController(BaseController):
                         f"The limit of stocks to compare are {ns_parser.limit}. The subsample will occur randomly.\n",
                     )
 
-                self.similar = [self.ticker] + self.similar
-
                 if self.similar:
+
+                    self.similar = [self.ticker] + self.similar
                     console.print(
                         f"[{self.user}] Similar Companies: {', '.join(self.similar)}",
                         "\n",
@@ -522,7 +526,7 @@ class ComparisonAnalysisController(BaseController):
         parser.add_argument(
             "-n",
             "--no-scale",
-            action="store_false",
+            action="store_true",
             dest="no_scale",
             default=False,
             help="Flag to not put all prices on same 0-1 scale",
@@ -538,7 +542,7 @@ class ComparisonAnalysisController(BaseController):
         if other_args and "-" not in other_args[0][0]:
             other_args.insert(0, "-t")
         ns_parser = parse_known_args_and_warn(
-            parser, other_args, EXPORT_ONLY_RAW_DATA_ALLOWED
+            parser, other_args, EXPORT_BOTH_RAW_DATA_AND_FIGURES
         )
         if ns_parser:
             if self.similar and len(self.similar) > 1:
@@ -586,7 +590,9 @@ class ComparisonAnalysisController(BaseController):
         )
         if other_args and "-" not in other_args[0][0]:
             other_args.insert(0, "-t")
-        ns_parser = parse_known_args_and_warn(parser, other_args)
+        ns_parser = parse_known_args_and_warn(
+            parser, other_args, EXPORT_BOTH_RAW_DATA_AND_FIGURES
+        )
         if ns_parser:
             if self.similar and len(self.similar) > 1:
                 yahoo_finance_view.display_correlation(
@@ -658,7 +664,7 @@ class ComparisonAnalysisController(BaseController):
         if other_args and "-" not in other_args[0][0]:
             other_args.insert(0, "-s")
         ns_parser = parse_known_args_and_warn(
-            parser, other_args, EXPORT_ONLY_RAW_DATA_ALLOWED
+            parser, other_args, EXPORT_BOTH_RAW_DATA_AND_FIGURES
         )
         if ns_parser:
             if self.similar and len(self.similar) > 1:
@@ -973,7 +979,7 @@ class ComparisonAnalysisController(BaseController):
     def call_po(self, _):
         """Call the portfolio optimization menu with selected tickers"""
         if self.similar and len(self.similar) > 1:
-            self.queue = po_controller.PortfolioOptimization(
+            self.queue = po_controller.PortfolioOptimizationController(
                 self.similar, self.queue
             ).menu(custom_path_menu_above="/portfolio/")
         else:

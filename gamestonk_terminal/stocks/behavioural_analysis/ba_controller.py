@@ -6,18 +6,19 @@ import logging
 from datetime import datetime, timedelta
 from typing import List
 
+import yfinance as yf
 from prompt_toolkit.completion import NestedCompleter
 
 from gamestonk_terminal import feature_flags as gtff
 from gamestonk_terminal.common.behavioural_analysis import (
     finbrain_view,
-    finnhub_view,
     google_view,
     reddit_view,
     sentimentinvestor_view,
     stocktwits_view,
     twitter_view,
 )
+from gamestonk_terminal.stocks.behavioural_analysis import finnhub_view, cramer_view
 from gamestonk_terminal.decorators import log_start_end
 from gamestonk_terminal.helper_funcs import (
     EXPORT_BOTH_RAW_DATA_AND_FIGURES,
@@ -59,11 +60,14 @@ class BehaviouralAnalysisController(StockBaseController):
         "queries",
         "rise",
         "headlines",
-        "stats",
         "popular",
         "getdd",
         "hist",
         "trend",
+        "snews",
+        "jcdr",
+        "jctr",
+        "interest",
     ]
 
     historical_sort = ["date", "value"]
@@ -93,7 +97,7 @@ class BehaviouralAnalysisController(StockBaseController):
 [src][Finbrain][/src]
     headlines     sentiment from 15+ major news headlines
 [src][Finnhub][/src]
-    stats         sentiment stats including comparison with sector{has_ticker_end}
+    snews         stock price displayed over sentiment of news headlines{has_ticker_end}
 [src][Reddit][/src]
     wsb           show what WSB gang is up to in subreddit wallstreetbets
     watchlist     show other users watchlist
@@ -112,14 +116,23 @@ class BehaviouralAnalysisController(StockBaseController):
 [src][Google][/src]
     mentions      interest over time based on stock's mentions
     regions       regions that show highest interest in stock
+    interest      interest over time of sentences versus stock price
     queries       top related queries with this stock
     rise          top rising related queries with stock{has_ticker_end}
 [src][SentimentInvestor][/src]
     trend         most talked about tickers within the last hour{has_ticker_start}
-    hist          plot historical RHI and AHI data by hour{has_ticker_end}[/cmds]
-
+    hist          plot historical RHI and AHI data by hour{has_ticker_end}
+[src][Jim Cramer][/src]
+    jcdr          Jim Cramer's daily recommendations{has_ticker_start}
+    jctr          Jim Cramer's recommendations by ticker{has_ticker_end}[/cmds]
         """
         console.print(text=help_text, menu="Stocks - Behavioural Analysis")
+
+    def custom_reset(self):
+        """Class specific component of reset command"""
+        if self.ticker:
+            return ["stocks", "ba", f"load {self.ticker}"]
+        return []
 
     @log_start_end(log=logger)
     def call_watchlist(self, other_args: List[str]):
@@ -144,6 +157,23 @@ class BehaviouralAnalysisController(StockBaseController):
         ns_parser = parse_known_args_and_warn(parser, other_args)
         if ns_parser:
             reddit_view.display_watchlist(num=ns_parser.limit)
+
+    @log_start_end(log=logger)
+    def call_snews(self, other_args: List[str]):
+        """Process snews command"""
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="snews",
+            description="""Display stock price and headlines sentiment using VADER model over time. [Source: Finnhub]""",
+        )
+        ns_parser = parse_known_args_and_warn(
+            parser, other_args, EXPORT_BOTH_RAW_DATA_AND_FIGURES
+        )
+        if ns_parser:
+            finnhub_view.display_stock_price_headlines_sentiment(
+                ticker=self.ticker, export=ns_parser.export
+            )
 
     @log_start_end(log=logger)
     def call_spac(self, other_args: List[str]):
@@ -499,6 +529,67 @@ class BehaviouralAnalysisController(StockBaseController):
                 console.print("No ticker loaded. Please load using 'load <ticker>'\n")
 
     @log_start_end(log=logger)
+    def call_interest(self, other_args: List[str]):
+        """Process interest command"""
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="interest",
+            description="""
+                Plot interest over time of words/sentences versus stock price. [Source: Google]
+            """,
+        )
+        parser.add_argument(
+            "-s",
+            "--start",
+            type=valid_date,
+            dest="start",
+            default=(datetime.now() - timedelta(days=2 * 366)).strftime("%Y-%m-%d"),
+            help="starting date (format YYYY-MM-DD) of interest",
+        )
+        parser.add_argument(
+            "-w",
+            "--words",
+            help="Select multiple sentences/words separated by commas. E.g. COVID,WW3,NFT",
+            dest="words",
+            type=lambda s: [str(item) for item in s.split(",")],
+            default=None,
+        )
+        if other_args and "-" not in other_args[0][0]:
+            other_args.insert(0, "-w")
+        ns_parser = parse_known_args_and_warn(
+            parser, other_args, EXPORT_BOTH_RAW_DATA_AND_FIGURES
+        )
+        if ns_parser:
+            if self.ticker:
+                if ns_parser.words:
+                    df_stock = yf.download(
+                        self.ticker,
+                        start=ns_parser.start.strftime("%Y-%m-%d"),
+                        progress=False,
+                    )
+
+                    if not df_stock.empty:
+                        google_view.display_correlation_interest(
+                            ticker=self.ticker,
+                            df_data=df_stock,
+                            words=ns_parser.words,
+                            export=ns_parser.export,
+                        )
+                    else:
+                        console.print(
+                            "[red]Ticker provided doesn't exist, load another one.\n[/red]"
+                        )
+                else:
+                    console.print(
+                        "[red]Words or sentences to be correlated against with, need to be provided.\n[/red]"
+                    )
+            else:
+                console.print(
+                    "[red]No ticker loaded. Please load using 'load <ticker>'.\n[/red]"
+                )
+
+    @log_start_end(log=logger)
     def call_queries(self, other_args: List[str]):
         """Process queries command"""
         parser = argparse.ArgumentParser(
@@ -668,30 +759,6 @@ class BehaviouralAnalysisController(StockBaseController):
                 console.print("No ticker loaded. Please load using 'load <ticker>'\n")
 
     @log_start_end(log=logger)
-    def call_stats(self, other_args: List[str]):
-        """Process stats command"""
-        parser = argparse.ArgumentParser(
-            add_help=False,
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-            prog="stats",
-            description="""
-                Sentiment stats which displays buzz, news score, articles last week, articles weekly average,
-                bullish vs bearish percentages, sector average bullish percentage, and sector average news score.
-                [Source: https://finnhub.io]
-            """,
-        )
-        ns_parser = parse_known_args_and_warn(
-            parser, other_args, EXPORT_BOTH_RAW_DATA_AND_FIGURES
-        )
-        if ns_parser:
-            if self.ticker:
-                finnhub_view.display_sentiment_stats(
-                    ticker=self.ticker, export=ns_parser.export
-                )
-            else:
-                console.print("No ticker loaded. Please load using 'load <ticker>'\n")
-
-    @log_start_end(log=logger)
     def call_hist(self, other_args: List[str]):
         """Process hist command"""
         parser = argparse.ArgumentParser(
@@ -791,4 +858,59 @@ class BehaviouralAnalysisController(StockBaseController):
                 hour=ns_parser.hour,
                 export=ns_parser.export,
                 number=ns_parser.number,
+            )
+
+    @log_start_end(log=logger)
+    def call_jcdr(self, other_args: List[str]):
+        """Process jcdr command"""
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="jcdr",
+            description="""
+                Show daily cramer recommendation
+            """,
+        )
+        parser.add_argument(
+            "-i",
+            "--inverse",
+            default=False,
+            action="store_true",
+            help="Show inverse recommendation",
+            dest="inverse",
+        )
+
+        ns_parser = parse_known_args_and_warn(
+            parser, other_args, export_allowed=EXPORT_ONLY_RAW_DATA_ALLOWED
+        )
+
+        if ns_parser:
+            cramer_view.display_cramer_daily(inverse=ns_parser.inverse)
+
+    @log_start_end(log=logger)
+    def call_jctr(self, other_args: List[str]):
+        """Process jctr command"""
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="jctr",
+            description="""
+                Show cramer recommendation for loaded ticker
+            """,
+        )
+        ns_parser = parse_known_args_and_warn(
+            parser,
+            other_args,
+            export_allowed=EXPORT_BOTH_RAW_DATA_AND_FIGURES,
+            raw=True,
+        )
+
+        if ns_parser:
+            if not self.ticker:
+                console.print(
+                    "[red]No ticker loaded.  Please use load <ticker> first.\n[/red]"
+                )
+                return
+            cramer_view.display_cramer_ticker(
+                ticker=self.ticker, raw=ns_parser.raw, export=ns_parser.export
             )

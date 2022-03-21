@@ -9,11 +9,12 @@ import os
 import random
 import re
 import sys
+from difflib import SequenceMatcher
 import pytz
 import pandas as pd
 from rich.table import Table
 import iso8601
-
+import dotenv
 import matplotlib
 import matplotlib.pyplot as plt
 from holidays import US as us_holidays
@@ -42,10 +43,90 @@ MENU_GO_BACK = 0
 MENU_QUIT = 1
 MENU_RESET = 2
 
+# Command location path to be shown in the figures depending on watermark flag
+command_location = ""
+
+
+# pylint: disable=global-statement
+def set_command_location(cmd_loc: str):
+    """Set command location
+
+    Parameters
+    ----------
+    cmd_loc: str
+        Command location called by user
+    """
+    global command_location
+    command_location = cmd_loc
+
+
+# pylint: disable=global-statement
+def set_export_folder(env_file: str = ".env", path_folder: str = ""):
+    """Set export folder location
+
+    Parameters
+    ----------
+    env_file : str
+        Env file to be updated
+    path_folder: str
+        Path folder location
+    """
+    os.environ["GTFF_EXPORT_FOLDER_PATH"] = path_folder
+    dotenv.set_key(env_file, "GTFF_EXPORT_FOLDER_PATH", path_folder)
+    gtff.EXPORT_FOLDER_PATH = path_folder
+
+
+def check_path(path: str) -> str:
+    """Check that path file exists
+
+    Parameters
+    ----------
+    path: str
+        path of file
+
+    Returns
+    -------
+    str:
+        Ratio of similarity between two strings
+    """
+    # Just return empty path because this will be handled outside this function
+    if not path:
+        return ""
+    if path[0] == "~":
+        path = path.replace("~", os.environ["HOME"])
+    # Return string of path if such relative path exists
+    if os.path.isfile(path):
+        return path
+    # Return string of path if an absolute path exists
+    if os.path.isfile("/" + path):
+        return f"/{path}"
+    logger.error("The path file '%s' does not exist.", path)
+    console.print(f"[red]The path file '{path}' does not exist.\n[/red]")
+    return ""
+
 
 def log_and_raise(error: Union[argparse.ArgumentTypeError, ValueError]) -> None:
     logger.error(str(error))
     raise error
+
+
+def similar(a: str, b: str) -> float:
+    """
+    Return a similarity float between string a and string b
+
+    Parameters
+    ----------
+    a: str
+        string a
+    b: str
+        string b
+
+    Returns
+    -------
+    float:
+        Ratio of similarity between two strings
+    """
+    return SequenceMatcher(None, a, b).ratio()
 
 
 def print_rich_table(
@@ -112,7 +193,7 @@ def print_rich_table(
             table.add_row(*row)
         console.print(table)
     else:
-        console.print(df.to_string())
+        console.print(df.to_string(col_space=0))
 
 
 def check_int_range(mini: int, maxi: int):
@@ -277,6 +358,30 @@ def valid_date_in_past(s: str) -> datetime:
         raise argparse.ArgumentTypeError(f"Not a valid date: {s}") from value_error
 
 
+def check_list_dates(str_dates: str) -> List[datetime]:
+    """Argparse type to check list of dates provided have a valid format
+
+    Parameters
+    ----------
+    str_dates: str
+        string with dates separated by ","
+
+    Returns
+    -------
+    list_dates: List[datetime]
+        List of valid dates
+    """
+    list_dates = list()
+    if str_dates:
+        if "," in str_dates:
+            for dt_marker in str_dates.split(","):
+                list_dates.append(valid_date(dt_marker))
+        else:
+            list_dates.append(valid_date(str_dates))
+
+    return list_dates
+
+
 def valid_date(s: str) -> datetime:
     """Argparse type to check date is in valid format"""
     try:
@@ -438,14 +543,19 @@ def us_market_holidays(years) -> list:
     return valid_holidays
 
 
-def lambda_long_number_format(num) -> str:
+def lambda_long_number_format(num, round_decimal=3) -> str:
     """Format a long number"""
+
     if isinstance(num, float):
         magnitude = 0
         while abs(num) >= 1000:
             magnitude += 1
             num /= 1000.0
-        num_str = int(num) if num.is_integer() else f"{num:.3f}"
+
+        string_fmt = f".{round_decimal}f"
+
+        num_str = int(num) if num.is_integer() else f"{num:{string_fmt}}"
+
         return f"{num_str} {' KMBTP'[magnitude]}".strip()
     if isinstance(num, int):
         num = str(num)
@@ -456,7 +566,10 @@ def lambda_long_number_format(num) -> str:
         while abs(num) >= 1000:
             magnitude += 1
             num /= 1000.0
-        num_str = int(num) if num.is_integer() else f"{num:.3f}"
+
+        string_fmt = f".{round_decimal}f"
+        num_str = int(num) if num.is_integer() else f"{num:{string_fmt}}"
+
         return f"{num_str} {' KMBTP'[magnitude]}".strip()
     return num
 
@@ -729,9 +842,8 @@ def parse_known_args_and_warn(
 
         parser.add_argument(
             "--export",
-            choices=choices_export,
             default="",
-            type=str,
+            type=check_file_type_saved(choices_export),
             dest="export",
             help=help_export,
         )
@@ -805,6 +917,7 @@ def lett_to_num(word: str) -> str:
 def get_flair() -> str:
     """Get a flair icon"""
     flairs = {
+        ":bb": "(🦋)",
         ":rocket": "(🚀🚀)",
         ":diamond": "(💎💎)",
         ":stars": "(✨)",
@@ -975,6 +1088,48 @@ def get_last_time_market_was_open(dt):
     return dt
 
 
+def check_file_type_saved(valid_types: List[str] = None):
+    """Provide valid types for the user to be able to select
+
+    Parameters
+    ----------
+    valid_types: List[str]
+        List of valid types to export data
+
+    Returns
+    -------
+    check_filenames: Optional[List[str]]
+        Function that returns list of filenames to export data
+    """
+
+    def check_filenames(filenames: str = "") -> str:
+        """Checks if filenames are valid
+
+        Parameters
+        ----------
+        filenames: str
+            filneames to be saved separated with comma
+
+        Returns
+        -------
+        str
+            valid filenames separated with comma
+        """
+        if not filenames or not valid_types:
+            return ""
+        valid_filenames = list()
+        for filename in filenames.split(","):
+            if filename.endswith(tuple(valid_types)):
+                valid_filenames.append(filename)
+            else:
+                console.print(
+                    f"[red]Filename '{filename}' provided is not valid![/red]"
+                )
+        return ",".join(valid_filenames)
+
+    return check_filenames
+
+
 def export_data(
     export_type: str, dir_path: str, func_name: str, df: pd.DataFrame = pd.DataFrame()
 ) -> None:
@@ -992,41 +1147,46 @@ def export_data(
         Dataframe of data to save
     """
     if export_type:
-        export_dir = dir_path.replace("gamestonk_terminal", "exports")
-
         now = datetime.now()
-        full_path = os.path.abspath(
-            os.path.join(
-                export_dir,
-                f"{func_name}_{now.strftime('%Y%m%d_%H%M%S')}",
-            )
-        )
 
-        if "," not in export_type:
-            export_type += ","
+        if gtff.EXPORT_FOLDER_PATH:
+            full_path_dir = gtff.EXPORT_FOLDER_PATH
+            path_cmd = dir_path.split("gamestonk_terminal/")[1].replace("/", "_")
+            default_filename = f"{now.strftime('%Y%m%d_%H%M%S')}_{path_cmd}_{func_name}"
+
+        else:
+            full_path_dir = dir_path.replace("gamestonk_terminal", "exports")
+            default_filename = f"{func_name}_{now.strftime('%Y%m%d_%H%M%S')}"
 
         for exp_type in export_type.split(","):
-            if exp_type:
-                saved_path = f"{full_path}.{exp_type}"
 
-                if exp_type == "csv":
-                    df.to_csv(saved_path)
-                elif exp_type == "json":
-                    df.to_json(saved_path)
-                elif exp_type in "xlsx":
-                    df.to_excel(saved_path, index=True, header=True)
-                elif exp_type == "png":
-                    plt.savefig(saved_path)
-                elif exp_type == "jpg":
-                    plt.savefig(saved_path)
-                elif exp_type == "pdf":
-                    plt.savefig(saved_path)
-                elif exp_type == "svg":
-                    plt.savefig(saved_path)
-                else:
-                    console.print("Wrong export file specified.\n")
+            # In this scenario the path was provided, e.g. --export pt.csv, pt.jpg
+            if "." in exp_type:
+                saved_path = os.path.join(full_path_dir, exp_type)
+            # In this scenario we use the default filename
+            else:
+                saved_path = os.path.join(
+                    full_path_dir, f"{default_filename}.{exp_type}"
+                )
 
-                console.print(f"Saved file: {saved_path}\n")
+            if exp_type.endswith("csv"):
+                df.to_csv(saved_path)
+            elif exp_type.endswith("json"):
+                df.to_json(saved_path)
+            elif exp_type.endswith("xlsx"):
+                df.to_excel(saved_path, index=True, header=True)
+            elif exp_type.endswith("png"):
+                plt.savefig(saved_path)
+            elif exp_type.endswith("jpg"):
+                plt.savefig(saved_path)
+            elif exp_type.endswith("pdf"):
+                plt.savefig(saved_path)
+            elif exp_type.endswith("svg"):
+                plt.savefig(saved_path)
+            else:
+                console.print("Wrong export file specified.\n")
+
+            console.print(f"Saved file: {saved_path}\n")
 
 
 def get_rf() -> float:
@@ -1115,3 +1275,20 @@ def excel_columns() -> List[str]:
         + [f"{x}{y}{z}" for x in letters for y in letters for z in letters]
     )
     return opts
+
+
+def handle_error_code(requests_obj, error_code_map):
+    """
+    Helper function to handle error code of HTTP requests.
+
+    Parameters
+    ----------
+    requests_obj: Object
+        Request object
+    error_code_map: Dict
+        Dictionary mapping of HTTP error code and output message
+
+    """
+    for error_code, error_msg in error_code_map.items():
+        if requests_obj.status_code == error_code:
+            console.print(error_msg)

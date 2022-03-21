@@ -55,13 +55,21 @@ from gamestonk_terminal.common.behavioural_analysis.twitter_view import (
 from gamestonk_terminal.common.behavioural_analysis.finbrain_view import (
     display_sentiment_analysis as headlines,
 )
-from gamestonk_terminal.common.behavioural_analysis.finnhub_view import (
-    display_sentiment_stats as stats,
-)
 from gamestonk_terminal.common.behavioural_analysis.sentimentinvestor_view import (
     display_historical as hist,
 )
 
 from gamestonk_terminal.common.behavioural_analysis.sentimentinvestor_view import (
     display_trending as trend,
+)
+
+from gamestonk_terminal.stocks.behavioural_analysis.finnhub_view import (
+    display_stock_price_headlines_sentiment as snews,
+)
+
+from gamestonk_terminal.stocks.behavioural_analysis.cramer_view import (
+    display_cramer_daily as cramer,
+)
+from gamestonk_terminal.stocks.behavioural_analysis.cramer_view import (
+    display_cramer_ticker as cramer_ticker,
 )

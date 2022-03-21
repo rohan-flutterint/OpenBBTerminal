@@ -6,6 +6,7 @@ import os
 
 import pandas as pd
 
+from gamestonk_terminal.decorators import check_api_key
 from gamestonk_terminal.decorators import log_start_end
 from gamestonk_terminal.helper_funcs import export_data, print_rich_table
 from gamestonk_terminal.rich_config import console
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def valinvest_score(ticker: str):
     """Value investing tool based on Warren Buffett, Joseph Piotroski and Benjamin Graham thoughts [Source: FMP]
 
@@ -28,11 +30,13 @@ def valinvest_score(ticker: str):
         Fundamental analysis ticker symbol
     """
     score = fmp_model.get_score(ticker)
-    console.print(f"Score: {score:.2f}".rstrip("0").rstrip(".") + " %")
-    console.print()
+    if score:
+        console.print(f"Score: {score:.2f}".rstrip("0").rstrip(".") + " %")
+        console.print("")
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_profile(ticker: str):
     """Financial Modeling Prep ticker profile
 
@@ -56,12 +60,14 @@ def display_profile(ticker: str):
         console.print(f"\nImage: {profile.loc['image'][0]}")
         console.print(f"\nDescription: {profile.loc['description'][0]}")
     else:
-        console.print("[red]Unable to get data[/red]")
+        logger.error("Could not get data")
+        console.print("[red]Unable to get data[/red]\n")
 
     console.print()
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_quote(ticker: str):
     """Financial Modeling Prep ticker quote
 
@@ -72,11 +78,15 @@ def display_quote(ticker: str):
     """
 
     quote = fmp_model.get_quote(ticker)
-    print_rich_table(quote, headers=[""], title=f"{ticker} Quote", show_index=True)
-    console.print()
+    if quote.empty:
+        console.print("[red]Data not found[/red]\n")
+    else:
+        print_rich_table(quote, headers=[""], title=f"{ticker} Quote", show_index=True)
+        console.print()
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_enterprise(
     ticker: str, number: int, quarterly: bool = False, export: str = ""
 ):
@@ -95,17 +105,23 @@ def display_enterprise(
     """
     df_fa = fmp_model.get_enterprise(ticker, number, quarterly)
     df_fa = df_fa[df_fa.columns[::-1]]
-    print_rich_table(
-        df_fa,
-        headers=list(df_fa.columns),
-        title=f"{ticker} Enterprise",
-        show_index=True,
-    )
-    console.print()
-    export_data(export, os.path.dirname(os.path.abspath(__file__)), "enterprise", df_fa)
+    if df_fa.empty:
+        console.print("[red]No data available[/red]\n")
+    else:
+        print_rich_table(
+            df_fa,
+            headers=list(df_fa.columns),
+            title=f"{ticker} Enterprise",
+            show_index=True,
+        )
+        console.print()
+        export_data(
+            export, os.path.dirname(os.path.abspath(__file__)), "enterprise", df_fa
+        )
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_discounted_cash_flow(
     ticker: str, number: int, quarterly: bool = False, export: str = ""
 ):
@@ -124,13 +140,18 @@ def display_discounted_cash_flow(
     """
     dcf = fmp_model.get_dcf(ticker, number, quarterly)
     dcf = dcf[dcf.columns[::-1]]
-    print_rich_table(dcf, headers=[""], title="Discounted Cash Flow", show_index=True)
-
-    console.print()
-    export_data(export, os.path.dirname(os.path.abspath(__file__)), "dcf", dcf)
+    if dcf.empty:
+        console.print("[red]No data available[/red]\n")
+    else:
+        print_rich_table(
+            dcf, headers=[""], title="Discounted Cash Flow", show_index=True
+        )
+        console.print()
+        export_data(export, os.path.dirname(os.path.abspath(__file__)), "dcf", dcf)
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_income_statement(
     ticker: str, number: int, quarterly: bool = False, export: str = ""
 ):
@@ -168,10 +189,12 @@ def display_income_statement(
             export, os.path.dirname(os.path.abspath(__file__)), "income", income
         )
     else:
+        logger.error("Could not get data")
         console.print("[red]Could not get data[/red]\n")
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_balance_sheet(
     ticker: str, number: int, quarterly: bool = False, export: str = ""
 ):
@@ -209,10 +232,12 @@ def display_balance_sheet(
             export, os.path.dirname(os.path.abspath(__file__)), "balance", balance
         )
     else:
+        logger.error("Could not get data")
         console.print("[red]Could not get data[/red]\n")
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_cash_flow(
     ticker: str, number: int, quarterly: bool = False, export: str = ""
 ):
@@ -248,10 +273,12 @@ def display_cash_flow(
         console.print()
         export_data(export, os.path.dirname(os.path.abspath(__file__)), "cash", cash)
     else:
+        logger.error("Could not get data")
         console.print("[red]Could not get data[/red]\n")
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_key_metrics(
     ticker: str, number: int, quarterly: bool = False, export: str = ""
 ):
@@ -283,10 +310,12 @@ def display_key_metrics(
             export, os.path.dirname(os.path.abspath(__file__)), "metrics", key_metrics
         )
     else:
+        logger.error("Could not get data")
         console.print("[red]Could not get data[/red]\n")
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_financial_ratios(
     ticker: str, number: int, quarterly: bool = False, export: str = ""
 ):
@@ -318,10 +347,12 @@ def display_financial_ratios(
             export, os.path.dirname(os.path.abspath(__file__)), "grratiosowth", ratios
         )
     else:
+        logger.error("Could not get data")
         console.print("[red]Could not get data[/red]\n")
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_FINANCIALMODELINGPREP"])
 def display_financial_statement_growth(
     ticker: str, number: int, quarterly: bool = False, export: str = ""
 ):
@@ -353,4 +384,5 @@ def display_financial_statement_growth(
             export, os.path.dirname(os.path.abspath(__file__)), "growth", growth
         )
     else:
+        logger.error("Could not get data")
         console.print("[red]Could not get data[/red]\n")
