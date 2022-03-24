@@ -14,6 +14,7 @@ from gamestonk_terminal import feature_flags as gtff
 from gamestonk_terminal.common import newsapi_view
 from gamestonk_terminal.common.quantitative_analysis import qa_view
 from gamestonk_terminal.decorators import log_start_end
+
 from gamestonk_terminal.helper_funcs import (
     EXPORT_ONLY_RAW_DATA_ALLOWED,
     check_positive,
@@ -26,7 +27,7 @@ from gamestonk_terminal.parent_classes import StockBaseController
 from gamestonk_terminal.rich_config import console
 from gamestonk_terminal.stocks import stocks_helper
 
-# pylint: disable=R1710,import-outside-toplevel
+# pylint: disable=R1710,import-outside-toplevel,R0913,R1702
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +233,7 @@ Stock: [/param]{stock_text}
             dest="mov_avg",
             type=str,
             help="Add moving average in number of days to plot and separate by a comma. Example: 20,30,50",
-            default="20,50",
+            default=None,
         )
 
         ns_parser = parse_known_args_and_warn(
@@ -261,17 +262,17 @@ Stock: [/param]{stock_text}
 
                     data = stocks_helper.process_candle(self.stock)
 
-                    if ns_parser.mov_avg:
+                    mov_avgs = []
 
+                    if ns_parser.mov_avg:
                         mov_list = (num for num in ns_parser.mov_avg.split(","))
-                        mov_avgs = []
 
                         for num in mov_list:
                             try:
                                 mov_avgs.append(int(num))
                             except ValueError:
                                 console.print(
-                                    f"{num} is not valid moving average, must be integer"
+                                    f"{num} is not a valid moving average, must be integer"
                                 )
 
                     stocks_helper.display_candle(
@@ -300,13 +301,13 @@ Stock: [/param]{stock_text}
             """,
         )
         parser.add_argument(
-            "-n",
-            "--num",
+            "-l",
+            "--limit",
             action="store",
-            dest="n_num",
+            dest="limit",
             type=check_positive,
             default=5,
-            help="Number of latest news being printed.",
+            help="Limit of latest news being printed.",
         )
         parser.add_argument(
             "-d",
@@ -332,7 +333,8 @@ Stock: [/param]{stock_text}
             nargs="+",
             help="Show news only from the sources specified (e.g bbc yahoo.com)",
         )
-
+        if other_args and "-" not in other_args[0][0]:
+            other_args.insert(0, "-l")
         ns_parser = parse_known_args_and_warn(parser, other_args)
         if ns_parser:
             sources = ns_parser.sources
@@ -342,11 +344,11 @@ Stock: [/param]{stock_text}
 
             d_stock = yf.Ticker(self.ticker).info
 
-            newsapi_view.news(
+            newsapi_view.display_news(
                 term=d_stock["shortName"].replace(" ", "+")
                 if "shortName" in d_stock
                 else self.ticker,
-                num=ns_parser.n_num,
+                num=ns_parser.limit,
                 s_from=ns_parser.n_start_date.strftime("%Y-%m-%d"),
                 show_newest=ns_parser.n_oldest,
                 sources=",".join(sources),
@@ -568,6 +570,10 @@ Stock: [/param]{stock_text}
                             self.queue,
                         )
                     except ModuleNotFoundError as e:
+                        logger.exception(
+                            "One of the optional packages seems to be missing: %s",
+                            str(e),
+                        )
                         console.print(
                             "One of the optional packages seems to be missing: ",
                             e,

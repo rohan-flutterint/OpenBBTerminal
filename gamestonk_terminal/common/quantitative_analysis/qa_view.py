@@ -13,6 +13,7 @@ from typing import Any, Optional, List
 import matplotlib
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -113,6 +114,7 @@ def display_hist(
         )
     else:
         if len(external_axes) != 1:
+            logger.error("Expected list of one axis item.")
             console.print("[red]Expected list of 1 axis items./n[/red]")
             return
         (ax,) = external_axes
@@ -185,6 +187,7 @@ def display_cdf(
         )
     else:
         if len(external_axes) != 1:
+            logger.error("Expected list of one axis item.")
             console.print("[red]Expected list of 1 axis items./n[/red]")
             return
         (ax,) = external_axes
@@ -290,6 +293,7 @@ def display_bw(
         )
     else:
         if len(external_axes) != 1:
+            logger.error("Expected list of one axis item.")
             console.print("[red]Expected list of 1 axis items./n[/red]")
             return
         (ax,) = external_axes
@@ -389,7 +393,8 @@ def display_acf(
         (ax1, ax2), (ax3, ax4) = axes
     else:
         if len(external_axes) != 4:
-            console.print("[red]Expected list of 1 axis items./n[/red]")
+            logger.error("Expected list of four axis items.")
+            console.print("[red]Expected list of 4 axis items./n[/red]")
             return
         (ax1, ax2, ax3, ax4) = external_axes
 
@@ -465,6 +470,7 @@ def display_qqplot(
         )
     else:
         if len(external_axes) != 1:
+            logger.error("Expected list of one axis item.")
             console.print("[red]Expected list of 1 axis items./n[/red]")
             return
         (ax,) = external_axes
@@ -551,6 +557,7 @@ def display_cusum(
         (ax1, ax2) = axes
     else:
         if len(external_axes) != 2:
+            logger.error("Expected list of two axis items.")
             console.print("[red]Expected list of 2 axis items./n[/red]")
             return
         (ax1, ax2) = external_axes
@@ -701,7 +708,8 @@ def display_seasonal(
         (ax1, ax2, ax3, ax4) = axes
     else:
         if len(external_axes) != 4:
-            console.print("[red]Expected list of 1 axis items./n[/red]")
+            logger.error("Expected list of four axis items.")
+            console.print("[red]Expected list of 4 axis items./n[/red]")
             return
         (ax1, ax2, ax3, ax4) = external_axes
 
@@ -867,14 +875,16 @@ def display_raw(
     )
 
     if isinstance(df, pd.Series):
-        df = pd.DataFrame(df)
+        df1 = pd.DataFrame(df)
+    else:
+        df1 = df.copy()
 
     if sort:
-        df = df.sort_values(by=sort, ascending=des)
-    df.index = [x.strftime("%Y-%m-%d") for x in df.index]
+        df1 = df.sort_values(by=sort, ascending=des)
+    df1.index = [x.strftime("%Y-%m-%d") for x in df.index]
     print_rich_table(
-        df.tail(num),
-        headers=[x.title() if x != "" else "Date" for x in df.columns],
+        df1.tail(num),
+        headers=[x.title() if x != "" else "Date" for x in df1.columns],
         title="[bold]Raw Data[/bold]",
         show_index=True,
         floatfmt=".3f",
@@ -889,6 +899,8 @@ def display_line(
     title: str = "",
     log_y: bool = True,
     draw: bool = False,
+    markers_lines: Optional[List[datetime]] = None,
+    markers_scatter: Optional[List[datetime]] = None,
     export: str = "",
     external_axes: Optional[List[plt.Axes]] = None,
 ):
@@ -904,6 +916,10 @@ def display_line(
         Flag for showing y on log scale
     draw: bool
         Flag for drawing lines and annotating on the plot
+    markers_lines: Optional[List[datetime]]
+        List of dates to highlight using vertical lines
+    markers_scatter: Optional[List[datetime]]
+        List of dates to highlight using scatter
     export: str
         Format to export data
     external_axes : Optional[List[plt.Axes]], optional
@@ -917,6 +933,7 @@ def display_line(
         )
     else:
         if len(external_axes) != 1:
+            logger.error("Expected list of one axis item.")
             console.print("[red]Expected list of 1 axis items./n[/red]")
             return
         (ax,) = external_axes
@@ -931,12 +948,51 @@ def display_line(
 
     else:
         ax.plot(data.index, data.values)
+
+        if markers_lines:
+            ymin, ymax = ax.get_ylim()
+            ax.vlines(markers_lines, ymin, ymax, color="#00AAFF")
+
+        if markers_scatter:
+            for n, marker_date in enumerate(markers_scatter):
+                price_location_idx = data.index.get_loc(marker_date, method="nearest")
+                # algo to improve text placement of highlight event number
+                if (
+                    0 < price_location_idx < (len(data) - 1)
+                    and data.iloc[price_location_idx - 1]
+                    > data.iloc[price_location_idx]
+                    and data.iloc[price_location_idx + 1]
+                    > data.iloc[price_location_idx]
+                ):
+                    text_loc = (0, -20)
+                else:
+                    text_loc = (0, 10)
+                ax.annotate(
+                    str(n + 1),
+                    (mdates.date2num(marker_date), data.iloc[price_location_idx]),
+                    xytext=text_loc,
+                    textcoords="offset points",
+                )
+                ax.scatter(
+                    marker_date,
+                    data.iloc[price_location_idx],
+                    color="#00AAFF",
+                    s=100,
+                )
+
+    data_type = data.name
+    ax.set_ylabel(data_type)
     ax.set_xlim(data.index[0], data.index[-1])
+    ax.ticklabel_format(style="plain", axis="y")
+    ax.get_yaxis().set_major_formatter(
+        matplotlib.ticker.FuncFormatter(lambda x, _: lambda_long_number_format(x))
+    )
 
     if title:
         ax.set_title(title)
     if draw:
         LineAnnotateDrawer(ax).draw_lines_and_annotate()
+
     theme.style_primary_axis(ax)
 
     if external_axes is None:

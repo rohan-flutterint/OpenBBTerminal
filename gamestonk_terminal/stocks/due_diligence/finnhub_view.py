@@ -9,6 +9,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from pandas.plotting import register_matplotlib_converters
 
+from gamestonk_terminal.decorators import check_api_key
 from gamestonk_terminal.config_terminal import theme
 from gamestonk_terminal.config_plot import PLOT_DPI
 from gamestonk_terminal.decorators import log_start_end
@@ -49,6 +50,7 @@ def plot_rating_over_time(
         _, ax = plt.subplots(figsize=plot_autoscale(), dpi=PLOT_DPI)
     else:
         if len(external_axes) != 1:
+            logger.error("Expected list of one axis item.")
             console.print("[red]Expected list of one axis item./n[/red]")
             return
         (ax,) = external_axes
@@ -74,6 +76,7 @@ def plot_rating_over_time(
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_FINNHUB_KEY"])
 def rating_over_time(ticker: str, num: int, raw: bool, export: str):
     """Rating over time (monthly). [Source: Finnhub]
 
@@ -91,7 +94,6 @@ def rating_over_time(ticker: str, num: int, raw: bool, export: str):
     df_rot = finnhub_model.get_rating_over_time(ticker)
 
     if df_rot.empty:
-        console.print("No ratings over time found", "\n")
         return
 
     if raw:

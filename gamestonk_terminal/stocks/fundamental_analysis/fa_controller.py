@@ -3,6 +3,7 @@ __docformat__ = "numpy"
 
 import argparse
 import logging
+from datetime import datetime, timedelta
 from typing import List
 
 from prompt_toolkit.completion import NestedCompleter
@@ -10,9 +11,11 @@ from prompt_toolkit.completion import NestedCompleter
 from gamestonk_terminal import feature_flags as gtff
 from gamestonk_terminal.decorators import log_start_end
 from gamestonk_terminal.helper_funcs import (
+    EXPORT_BOTH_RAW_DATA_AND_FIGURES,
     EXPORT_ONLY_RAW_DATA_ALLOWED,
     check_positive,
     parse_known_args_and_warn,
+    valid_date,
 )
 from gamestonk_terminal.menu import session
 from gamestonk_terminal.parent_classes import StockBaseController
@@ -51,6 +54,7 @@ class FundamentalAnalysisController(StockBaseController):
         "balance",
         "cash",
         "mgmt",
+        "splits",
         "info",
         "shrs",
         "sust",
@@ -66,6 +70,8 @@ class FundamentalAnalysisController(StockBaseController):
         "earnings",
         "fraud",
         "dcf",
+        "mktcap",
+        "dupont",
     ]
 
     CHOICES_MENUS = [
@@ -109,13 +115,15 @@ Ticker: [/param] {self.ticker} [cmds]
     warnings      company warnings according to Sean Seah book [src][Market Watch][/src]
     dcf           advanced Excel customizable discounted cash flow [src][Stockanalysis][/src][/cmds]
 [src][Yahoo Finance][/src]
-    info          information scope of the company{is_foreign_start}
-    shrs          shareholders of the company
-    sust          sustainability values of the company
+    info          information scope of the company
+    mktcap        estimated market cap{is_foreign_start}
+    shrs          shareholders (insiders, institutions and mutual funds)
+    sust          sustainability values (environment, social and governance)
     cal           calendar earnings and estimates of the company
+    divs          show historical dividends for company
+    splits        stock split and reverse split events since IPO
     web           open web browser of the company
-    hq            open HQ location of the company
-    divs          show historical dividends for company{is_foreign_end}
+    hq            open HQ location of the company{is_foreign_end}
 [src][Alpha Vantage][/src]
     overview      overview of the company
     key           company key metrics
@@ -123,7 +131,8 @@ Ticker: [/param] {self.ticker} [cmds]
     balance       balance sheet of the company
     cash          cash flow of the company
     earnings      earnings dates and reported EPS
-    fraud         key fraud ratios[/cmds]
+    fraud         key fraud ratios
+    dupont        detailed breakdown for return on equity[/cmds]
 [info]Other Sources:[/info][menu]
 >   fmp           profile,quote,enterprise,dcf,income,ratios,growth from FMP[/menu]
         """
@@ -249,7 +258,47 @@ Ticker: [/param] {self.ticker} [cmds]
             parser, other_args, EXPORT_ONLY_RAW_DATA_ALLOWED
         )
         if ns_parser:
-            yahoo_finance_view.display_info(self.ticker)
+            yahoo_finance_view.display_info(self.ticker, export=ns_parser.export)
+
+    @log_start_end(log=logger)
+    def call_mktcap(self, other_args: List[str]):
+        """Process mktcap command."""
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="mktcap",
+            description="""Market Cap estimate over time. [Source: Yahoo Finance]""",
+        )
+        parser.add_argument(
+            "-s",
+            "--start",
+            type=valid_date,
+            default=(datetime.now() - timedelta(days=3 * 366)).strftime("%Y-%m-%d"),
+            dest="start",
+            help="The starting date (format YYYY-MM-DD) of the market cap display",
+        )
+        ns_parser = parse_known_args_and_warn(
+            parser, other_args, EXPORT_BOTH_RAW_DATA_AND_FIGURES
+        )
+        if ns_parser:
+            yahoo_finance_view.display_mktcap(
+                self.ticker, start=ns_parser.start, export=ns_parser.export
+            )
+
+    @log_start_end(log=logger)
+    def call_splits(self, other_args: List[str]):
+        """Process splits command."""
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="splits",
+            description="""Stock splits and reverse split events since IPO [Source: Yahoo Finance]""",
+        )
+        ns_parser = parse_known_args_and_warn(
+            parser, other_args, EXPORT_BOTH_RAW_DATA_AND_FIGURES
+        )
+        if ns_parser:
+            yahoo_finance_view.display_splits(self.ticker, export=ns_parser.export)
 
     @log_start_end(log=logger)
     def call_shrs(self, other_args: List[str]):
@@ -266,7 +315,9 @@ Ticker: [/param] {self.ticker} [cmds]
         )
         if not self.suffix:
             if ns_parser:
-                yahoo_finance_view.display_shareholders(self.ticker)
+                yahoo_finance_view.display_shareholders(
+                    self.ticker, export=ns_parser.export
+                )
         else:
             console.print("Only US tickers are recognized.", "\n")
 
@@ -291,7 +342,9 @@ Ticker: [/param] {self.ticker} [cmds]
         )
         if not self.suffix:
             if ns_parser:
-                yahoo_finance_view.display_sustainability(self.ticker)
+                yahoo_finance_view.display_sustainability(
+                    self.ticker, export=ns_parser.export
+                )
         else:
             console.print("Only US tickers are recognized.", "\n")
 
@@ -312,7 +365,9 @@ Ticker: [/param] {self.ticker} [cmds]
         )
         if not self.suffix:
             if ns_parser:
-                yahoo_finance_view.display_calendar_earnings(ticker=self.ticker)
+                yahoo_finance_view.display_calendar_earnings(
+                    ticker=self.ticker, export=ns_parser.export
+                )
         else:
             console.print("Only US tickers are recognized.", "\n")
 
@@ -632,6 +687,7 @@ Ticker: [/param] {self.ticker} [cmds]
                 ticker=self.ticker,
                 limit=ns_parser.limit,
                 quarterly=ns_parser.b_quarter,
+                export=ns_parser.export,
             )
 
     @log_start_end(log=logger)
@@ -681,11 +737,43 @@ Ticker: [/param] {self.ticker} [cmds]
                 "This model is 80% accurate in predicting bankruptcy."
             ),
         )
+        parser.add_argument(
+            "-e",
+            "--explanation",
+            action="store_true",
+            dest="exp",
+            default=False,
+            help="Shows an explanation for the metrics",
+        )
         ns_parser = parse_known_args_and_warn(
             parser, other_args, EXPORT_ONLY_RAW_DATA_ALLOWED
         )
         if ns_parser:
-            av_view.display_fraud(self.ticker)
+            av_view.display_fraud(self.ticker, ns_parser.exp)
+
+    @log_start_end(log=logger)
+    def call_dupont(self, other_args: List[str]):
+        """Process dupont command."""
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.RawTextHelpFormatter,
+            prog="dupont",
+            description="The extended dupont deconstructs return on equity to allow investors to understand it better",
+        )
+        parser.add_argument(
+            "--raw",
+            action="store_true",
+            default=False,
+            dest="raw",
+            help="Print raw data.",
+        )
+        ns_parser = parse_known_args_and_warn(
+            parser, other_args, EXPORT_ONLY_RAW_DATA_ALLOWED
+        )
+        if ns_parser:
+            av_view.display_dupont(
+                self.ticker, raw=ns_parser.raw, export=ns_parser.export
+            )
 
     @log_start_end(log=logger)
     def call_dcf(self, other_args: List[str]):

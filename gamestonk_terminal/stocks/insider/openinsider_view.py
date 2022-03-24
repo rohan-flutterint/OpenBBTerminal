@@ -9,7 +9,6 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from gamestonk_terminal import feature_flags as gtff
 from gamestonk_terminal.decorators import log_start_end
 from gamestonk_terminal.helper_funcs import (
     export_data,
@@ -21,6 +20,7 @@ from gamestonk_terminal.stocks.insider.openinsider_model import (
     get_open_insider_data,
     get_open_insider_link,
 )
+from gamestonk_terminal import rich_config
 
 logger = logging.getLogger(__name__)
 
@@ -159,8 +159,7 @@ def print_insider_data(type_insider: str, limit: int = 10, export: str = ""):
         res.append(row)
 
     df = pd.DataFrame(res).dropna().head(n=limit)
-
-    df.columns = [
+    columns = [
         "X",
         "Filing Date",
         "Trade Date",
@@ -175,6 +174,11 @@ def print_insider_data(type_insider: str, limit: int = 10, export: str = ""):
         "Diff Own",
         "Value",
     ]
+
+    if df.shape[1] == 13:
+        df.columns = columns
+    else:
+        df.columns = columns[1:]
 
     df["Filing Date"] = df["Filing Date"].apply(
         lambda x: "\n".join(textwrap.wrap(x, width=10)) if isinstance(x, str) else x
@@ -203,11 +207,12 @@ def print_insider_data(type_insider: str, limit: int = 10, export: str = ""):
 
     export_data(export, os.path.dirname(os.path.abspath(__file__)), type_insider, df)
 
-    l_chars = [list(chars) for chars in df["X"].values]
-    l_uchars = np.unique(list(itertools.chain(*l_chars)))
+    if df.shape[1] == 13:
+        l_chars = [list(chars) for chars in df["X"].values]
+        l_uchars = np.unique(list(itertools.chain(*l_chars)))
 
-    for char in l_uchars:
-        console.print(d_notes[char])
+        for char in l_uchars:
+            console.print(d_notes[char])
     console.print("")
 
 
@@ -259,7 +264,7 @@ def print_insider_filter(
             columns=["Filing Link", "Ticker Link", "Insider Link"]
         ).head(limit)
 
-    if gtff.USE_COLOR and not links:
+    if rich_config.USE_COLOR and not links:
         if not df_insider[df_insider["Trade Type"] == "S - Sale"].empty:
             df_insider[df_insider["Trade Type"] == "S - Sale"] = df_insider[
                 df_insider["Trade Type"] == "S - Sale"

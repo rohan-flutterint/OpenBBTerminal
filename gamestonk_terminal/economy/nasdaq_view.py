@@ -8,6 +8,7 @@ from typing import List, Optional
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from gamestonk_terminal.decorators import check_api_key
 from gamestonk_terminal.config_terminal import theme
 from gamestonk_terminal.config_plot import PLOT_DPI
 from gamestonk_terminal.decorators import log_start_end
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 @log_start_end(log=logger)
+@check_api_key(["API_KEY_QUANDL"])
 def display_big_mac_index(
     country_codes: List[str],
     raw: bool = False,
@@ -58,6 +60,7 @@ def display_big_mac_index(
 
         else:
             if len(external_axes) != 3:
+                logger.error("Expected list of 3 axis items.")
                 console.print("[red]Expected list of 3 axis items./n[/red]")
                 return
             (ax,) = external_axes
@@ -72,7 +75,10 @@ def display_big_mac_index(
 
         if raw:
             print_rich_table(
-                big_mac, headers=list(big_mac.columns), title="Big Mac Index"
+                big_mac,
+                headers=list(big_mac.columns),
+                title="Big Mac Index",
+                show_index=True,
             )
             console.print("")
 
@@ -81,4 +87,5 @@ def display_big_mac_index(
         )
         console.print("")
     else:
+        logger.error("Unable to get big mac data")
         console.print("[red]Unable to get big mac data[/red]\n")

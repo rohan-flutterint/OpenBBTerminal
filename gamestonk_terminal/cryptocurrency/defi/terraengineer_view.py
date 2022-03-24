@@ -33,7 +33,7 @@ def display_terra_asset_history(
     external_axes: Optional[List[plt.Axes]] = None,
 ) -> None:
     """Displays the 30-day history of specified asset in terra address
-    [Source: https://docs.llama.fi/api]
+    [Source: https://terra.engineer/]
 
     Parameters
     ----------
@@ -56,6 +56,7 @@ def display_terra_asset_history(
         _, ax = plt.subplots(figsize=plot_autoscale(), dpi=PLOT_DPI)
     else:
         if len(external_axes) != 1:
+            logger.error("Expected list of one axis item.")
             console.print("[red]Expected list of one axis item./n[/red]")
             return
         (ax,) = external_axes
@@ -85,7 +86,7 @@ def display_anchor_yield_reserve(
     export: str = "", external_axes: Optional[List[plt.Axes]] = None
 ) -> None:
     """Displays the 30-day history of the Anchor Yield Reserve.
-    [Source: https://docs.llama.fi/api]
+    [Source: https://terra.engineer/]
 
     Parameters
     ----------
@@ -104,6 +105,7 @@ def display_anchor_yield_reserve(
         _, ax = plt.subplots(figsize=plot_autoscale(), dpi=PLOT_DPI)
     else:
         if len(external_axes) != 1:
+            logger.error("Expected list of one axis item.")
             console.print("[red]Expected list of one axis item./n[/red]")
             return
         (ax,) = external_axes

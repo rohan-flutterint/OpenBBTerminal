@@ -13,6 +13,7 @@ from gamestonk_terminal import feature_flags as gtff
 from gamestonk_terminal.cryptocurrency.defi import (
     coindix_model,
     coindix_view,
+    cryptosaurio_view,
     defipulse_view,
     defirate_view,
     graph_model,
@@ -69,6 +70,7 @@ class DefiController(BaseController):
         "sratio",
         "sreturn",
         "lcsc",
+        "anchor",
     ]
 
     PATH = "/crypto/defi/"
@@ -103,13 +105,12 @@ class DefiController(BaseController):
     def print_help(self):
         """Print help"""
         help_text = """[cmds]
-[info]Overview:[/info]
     newsletter    Recent DeFi related newsletters [src][Substack][/src]
     dpi           DeFi protocols listed on DefiPulse [src][Defipulse][/src]
     funding       Funding rates - current or last 30 days average [src][Defirate][/src]
     borrow        DeFi borrow rates - current or last 30 days average [src][Defirate][/src]
     lending       DeFi ending rates - current or last 30 days average [src][Defirate][/src]
-    vaults        Top DeFi Vaults on different blockchains [src][[Coindix][/src]
+    vaults        Top DeFi Vaults on different blockchains [src][Coindix][/src]
 [src][The Graph][/src] [info]Uniswap[/info]
     tokens        Tokens trade-able on Uniswap
     stats         Base statistics about Uniswap
@@ -122,8 +123,8 @@ class DefiController(BaseController):
     stvl          Displays historical values of the total sum of TVLs from all dApps
     dtvl          Displays historical total value locked (TVL) by dApp
 [src][Terra Engineer][/src]
-    aterra        Displays 30-day history of specified asset in terra address [src][Terra Engineer][/src]
-    ayr           Displays 30-day history of anchor yield reserve [src][Terra Engineer][/src]
+    aterra        Displays 30-day history of specified asset in terra address
+    ayr           Displays 30-day history of anchor yield reserve
 [src][Terra FCD][/src]
     sinfo         Displays staking info for provided terra account address
     validators    Displays information about terra blockchain validators
@@ -131,11 +132,53 @@ class DefiController(BaseController):
     gacc          Displays terra blockchain account growth history
     sratio        Displays terra blockchain staking ratio history
     sreturn       Displays terra blockchain staking returns history
-
 [src][Smartstake][/src]
-    lcsc         Displays Luna circulating supply changes[/cmds]
+    lcsc          Displays Luna circulating supply changes
+[src][CryptoSaurio][/src]
+    anchor        Display anchor earnings data[/cmds]
 """
         console.print(text=help_text, menu="Cryptocurrency - Decentralized Finance")
+
+    @log_start_end(log=logger)
+    def call_anchor(self, other_args: List[str]):
+        parser = argparse.ArgumentParser(
+            add_help=False,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="anchor",
+            description="""
+                Displays anchor protocol earnings data of a certain terra address
+                --transactions flag can be passed to show history of previous transactions
+                [Source: https://cryptosaurio.com/]
+            """,
+        )
+        parser.add_argument(
+            "--address",
+            dest="address",
+            type=check_terra_address_format,
+            help="Terra address. Valid terra addresses start with 'terra'",
+            required="-h" not in other_args,
+        )
+        parser.add_argument(
+            "--transactions",
+            action="store_true",
+            help="Flag to show transactions history in anchor earn",
+            dest="transactions",
+            default=False,
+        )
+
+        if other_args and not other_args[0][0] == "-":
+            other_args.insert(0, "--address")
+
+        ns_parser = parse_known_args_and_warn(
+            parser, other_args, EXPORT_ONLY_RAW_DATA_ALLOWED
+        )
+
+        if ns_parser:
+            cryptosaurio_view.display_anchor_data(
+                show_transactions=ns_parser.transactions,
+                export=ns_parser.export,
+                address=ns_parser.address,
+            )
 
     @log_start_end(log=logger)
     def call_aterra(self, other_args: List[str]):

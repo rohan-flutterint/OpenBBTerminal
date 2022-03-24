@@ -26,6 +26,7 @@ jobs:
           key: ${{ runner.os }}-linting
           restore-keys: ${{ runner.os }}-linting
 
+      - run: python custom_pre_commit/check_doc.py --ignore-files=settings_controller.py,keys_controller.py,degiro_controller.py,oanda_controller.py --ignore-commands=login,al_swe,info_swe,goodness,resources,yf,yolo
       - run: pip install bandit black codespell flake8 mypy pyupgrade safety pylint==2.12.2
       - run: pip install types-pytz types-requests types-termcolor types-tabulate types-PyYAML types-python-dateutil types-setuptools
       - run: bandit -x ./tests -r . || true
@@ -36,7 +37,7 @@ jobs:
       - run: shopt -s globstar && pyupgrade --py36-plus **/*.py
       - run: safety check
       - run: |
-          pylint terminal.py gamestonk_terminal discordbot tests
+          pylint terminal.py gamestonk_terminal bots tests
   test:
     name: Base Tests - Ubuntu-latest - Python 3.9
     needs: linting

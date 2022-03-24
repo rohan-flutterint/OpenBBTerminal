@@ -8,23 +8,26 @@ interactions:
       - gzip, deflate
       Connection:
       - keep-alive
+      User-Agent:
+      - python-requests/2.27.1
     method: GET
     uri: https://data.nasdaq.com/api/v3/datasets/ECONOMIST/BIGMAC_VNM?api_key=MOCK_API_KEY&column_index=3
   response:
     body:
       string: !!binary |
-        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
+        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
+        WsY88wQAAA==
     headers:
       Access-Control-Allow-Credentials:
       - 'true'
@@ -47,15 +50,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '678'
+      - '691'
       Content-Security-Policy:
       - frame-ancestors 'self';
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Mon, 24 Jan 2022 18:27:54 GMT
+      - Thu, 17 Mar 2022 08:55:47 GMT
       ETag:
-      - W/"213829aa5f7d40ef9cfb801209d06212"
+      - W/"45e476f05d31ac28262fce2d9afbc44c"
       Pragma:
       - no-cache
       Referrer-Policy:
@@ -63,10 +66,10 @@ interactions:
       Server:
       - openresty
       Set-Cookie:
-      - visid_incap_2170999=H3u2wO7WQKuKN8N/iywt3qnv7mEAAAAAQUIPAAAAAAASn1+FT7/6mlILYAo3V2OW;
-        expires=Tue, 24 Jan 2023 09:00:57 GMT; HttpOnly; path=/; Domain=.nasdaq.com
-      - nlbi_2170999=LaImQMkIj3aoGLuAKj7S7QAAAAAJCtSqmyubCBXkwldUQXNP; path=/; Domain=.nasdaq.com
-      - incap_ses_891_2170999=F+8uPyS6ImB32wM9THhdDKnv7mEAAAAAsyeqIsmJAOjK5fObYw0UAw==;
+      - visid_incap_2170999=STsmrKyPQu64aa80lrGQaY/3MmIAAAAAQUIPAAAAAAD11SMD8kekl6hw8oeXxfCY;
+        expires=Fri, 17 Mar 2023 07:06:21 GMT; HttpOnly; path=/; Domain=.nasdaq.com
+      - nlbi_2170999=H51JY5gSvTadStEEKj7S7QAAAACRqg7AA513Bgh/VbvHBQfD; path=/; Domain=.nasdaq.com
+      - incap_ses_1451_2170999=IdG0WOW6RSD2ziGeDP0iFJL3MmIAAAAAfBTiE05BGmD0mPhi8YqcHw==;
         path=/; Domain=.nasdaq.com
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains; preload
@@ -77,16 +80,15 @@ interactions:
       X-Frame-Options:
       - SAMEORIGIN
       X-Iinfo:
-      - 10-29222217-29222237 NNNN CT(2 39 0) RT(1643048873176 130) q(0 0 0 -1) r(2
-        2) U2
+      - 14-222813705-222813279 PNNN RT(1647507346674 104) q(0 0 0 0) r(2 2) U2
       X-RateLimit-Limit:
       - '50000'
       X-RateLimit-Remaining:
-      - '49996'
+      - '49920'
       X-Request-Id:
-      - 640de875-e76a-42bf-bb28-c9607f0a5896
+      - f746043d-b1be-408a-b057-833e092da47a
       X-Runtime:
-      - '0.139344'
+      - '0.099229'
       X-XSS-Protection:
       - 1; mode=block
     status:
@@ -101,28 +103,30 @@ interactions:
       - gzip, deflate
       Connection:
       - keep-alive
+      User-Agent:
+      - python-requests/2.27.1
     method: GET
     uri: https://data.nasdaq.com/api/v3/datasets/ECONOMIST/BIGMAC_ARG?api_key=MOCK_API_KEY&column_index=3
   response:
     body:
       string: !!binary |
-        H4sIAAAAAAAAA21VXW/bOBD8K4SebWH5Lfot1x6KPOQKXPN0RWGwFu0Ipw8fJacNiv73G1pk3BYF
-        nADm7OzOzi7pb1XrFz+Hpdp9q7q22jlrjeFqU873h6kN1a764/7dw92b/d3f76oV+wxWAf988/6v
-        9w/3Hx6BjX64xncn9uAP7H5sw1e2ZXfxFMalG32ih/kQu/PSTSMiH58C+zm6m5kfWTcepzj4ng3B
-        z5cY2HRkh0uMYTy8sPD18OTHU2DRLwHhCzufzzW7X0r0zJan0EX27PtLYP7ku3FemGdzN3S9jwzy
-        /w1LynmapjYVbNkc4nN3CPMGtUGHjAOaBCnLq9nb7ngMsRtP7BxTZCo8+Jgy/aLoy3TpW9YN5/4F
-        qRA2jeEmH6kvMCayCZ9nlE0q2xrexHCMYX4K7d5jJpUgIbbEt1w/Eu3wEbZ20v6TjA5fwrzs/bNH
-        Q5/7sMckk/Og8C3ZreQImnqY/dsgoi2prSQEHab+Moz7NLm52n2s3qZEGNPUw6n9tdPq06aCsP8u
-        yX0UaVH0BTHLyznVfOyGwD7AGSTYVOcYhu4yVLuj7+ewqXp4jmbGS9+DEf04p8mWg1y9S4tS7eSm
-        mhcfl1s3PwgNY/vbLtMOQ/jHn3qXtVPKcGe4Mc5y82lTcH71RtZWNUJySVJqaWXGYcvqnaw1OSGF
-        ks4IrfgNX/mibpRpGqtIctJOrTh3hQ/ckiYlLdfS3dDCJhKKRNNIZSgn582NDC6XzhqttdKZDbho
-        d4ag6/pXKttCVjUXWkvFyUlhbCYDLmTolo6k5to0BTa3vqWyjSKjhG10SQ64CJeNs4QCSikrcnJ9
-        Y5OBcEUuGV/aBlxqCy1Iln+ZrW5ta0vWCmsErCttAy5sQldITlY3Ok+My1vtxjpHIHOhbPEUcGE3
-        3GInpEzdl8ZwvdZ5wzVDzkjtki15Xfj19qV1UbWRxpAhUopUk5W/3jRVI6mBXwK4Lab+uEy6cUqT
-        sARrMhvwmpxjl0SDYWFReVlFel0lWRNOG4GFVUrkxgjbYK4XWNaYlWusUA5DycrRVYZFbdAPWUyL
-        o/haO8FloMaSwxrCVPFaG/PW175FLRwJ4uBipQr7dR14rTVJI4TTvCkoxr0q4zANt8cKIq1FHhie
-        nZyb18VIwpTW1whnWSGsX4+ottlvSM5nos7bcXse0hGeKbwnvT/PeJbWB2eKeGjLl/RSXH+50m+d
-        lpK+f/8f4KOrOAMHAAA=
+        H4sIAAAAAAAAA21VXW/bOBD8K4SebWH5Tfot1x6KPOQKXPN0RWGwFu0Ipw+fJKcNiv73G1pk3BYF
+        nADW7OzOzq7W36omLGGOS7X7VrVNtfPWGsPVpjzfH8YmVrvqj/t3D3dv9nd/v6tW7DNYBfzzzfu/
+        3j/cf3gENoT+Gt+e2EM4sPuhiV/Zlt1Npzgs7RASPc6HqT0v7Tgg8vEpsp+j25mFgbXDcZz60LE+
+        hvkyRTYe2eEyTXE4vLD49fAUhlNkU1giwhd2Pp9rdr+U6JktT7Gd2HPoLpGFU2iHeWGBzW3fdmFi
+        kP9vXFLO0zg2qWDD5jg9t4c4b1AbdMg4oEmQsryavW2Pxzi1w4mdpxSZCvdhSpl+UfRlvHQNa/tz
+        94JUCBuHeJOP1BcYM7ERn2eUTSqbGt5M8TjF+Sk2+4CZVIKE2JLccv1ItMNHUC0d/ycZHb/EedmH
+        54CGPndxj0km51cK30qOoLGD2b8NItqS2kpC0GHsLv2wT5Obq93H6m1KhDGNHZzaXzutPm0qCPvv
+        ktxHkQZFXxCzvJxTzce2j+wDnEGCTXWeYt9e+mp3DN0cN1UHz9HMcOk6MKYwzGmy5UGu3qZFqXZy
+        U81LmJZbNz8IjUPz2y7TDkP4x596V7VwmhR5Ibgixz9trjjfkr16I2uvlOHecGO85eaGr97J2ion
+        JJckpZZWZhy2Fb5GbimU9EZoVfIDX/midso4ZxVJTtqrlc994QO3BIHSci39DS1sIqFIOCeVoZyc
+        uxsZXC69NVprpTMbcNHuDUHX9a9UtoWsai60loqTl8LYTAZcyNAtPUnNtXEFNre+pbJOkVHCOl2S
+        Ay7CpfOWUEApZUVOrm9sMhCOsSTjS9uAS22hBcnyL7PVrW1tyVphjYB1pW3AhU3oCsnJaqfzxLi8
+        1XbWewKZC2WLp4AL23GLnZAydV8aw+u3zhuuGfJGap9syevCAa9sVRtpDBkipUi5rPx121SNpAZ+
+        CeC2mPrjMmnnlSZhCdZk9usuceyScBgWFpWXVaTXVZI14akTWFilRG6MsA3m+oLLGrPyzgrlMZSs
+        HF1lWNQG/ZDFtDiKr7UTXAZqLHmsIUwVr7Uxb319jUQtPAni4GKlCvt1HXitNUkjhNfcFRTjXpVx
+        mIa3xwoirUUeGM5Szs3rYiROYL5WeJYVwvr1gFFts9+QnJ+JOm/H7XykRzhjuDddOM84W+tBGicc
+        4vIlXZLrL1v6LdRS0vfv/wPEGGzfIwcAAA==
     headers:
       Access-Control-Allow-Credentials:
       - 'true'
@@ -145,15 +149,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '926'
+      - '937'
       Content-Security-Policy:
       - frame-ancestors 'self';
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Mon, 24 Jan 2022 18:27:54 GMT
+      - Thu, 17 Mar 2022 08:55:48 GMT
       ETag:
-      - W/"78ad4124a9a0a5a40d42035affcc280b"
+      - W/"9b8e2f8e8d4a3da812e45c5476ff6f2a"
       Pragma:
       - no-cache
       Referrer-Policy:
@@ -161,10 +165,10 @@ interactions:
       Server:
       - openresty
       Set-Cookie:
-      - visid_incap_2170999=pSLDYE0GQiqeWDC9vfZXd6rv7mEAAAAAQUIPAAAAAACoM6+JKkDyTKGeT6P8JlS8;
-        expires=Tue, 24 Jan 2023 09:00:56 GMT; HttpOnly; path=/; Domain=.nasdaq.com
-      - nlbi_2170999=xDEkcYxZ7xYyxB0VKj7S7QAAAABGzyhrwbiEA2c2AtuJD4Ru; path=/; Domain=.nasdaq.com
-      - incap_ses_891_2170999=9lbgCLRyvHRo3AM9THhdDKrv7mEAAAAApeelD1oTX5fEsyl70KVydQ==;
+      - visid_incap_2170999=STsmrKyPQu64aa80lrGQaY/3MmIAAAAAQUIPAAAAAAD11SMD8kekl6hw8oeXxfCY;
+        expires=Fri, 17 Mar 2023 07:06:22 GMT; HttpOnly; path=/; Domain=.nasdaq.com
+      - nlbi_2170999=k2u1WJTAFF3Cru8iKj7S7QAAAACPTqArCec3YH38wKod3Y6j; path=/; Domain=.nasdaq.com
+      - incap_ses_1451_2170999=pQqDDLPvEQD2ziGeDP0iFJP3MmIAAAAAeKkrGzndHHQgpAIxnVgE/Q==;
         path=/; Domain=.nasdaq.com
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains; preload
@@ -175,16 +179,16 @@ interactions:
       X-Frame-Options:
       - SAMEORIGIN
       X-Iinfo:
-      - 4-17251222-17251230 NNNN CT(2 1 0) RT(1643048873720 136) q(0 0 0 -1) r(2 2)
-        U2
+      - 12-179589327-179589346 NNNY CT(7 17 0) RT(1647507347101 106) q(0 0 0 0) r(1
+        1) U2
       X-RateLimit-Limit:
       - '50000'
       X-RateLimit-Remaining:
-      - '49995'
+      - '49919'
       X-Request-Id:
-      - 88ac730d-6f63-4b26-ada9-f7175c487126
+      - 6d9e9b24-0f23-43ef-adf6-fa41158b5d71
       X-Runtime:
-      - '0.137028'
+      - '0.107655'
       X-XSS-Protection:
       - 1; mode=block
     status:
@@ -199,26 +203,28 @@ interactions:
       - gzip, deflate
       Connection:
       - keep-alive
+      User-Agent:
+      - python-requests/2.27.1
     method: GET
     uri: https://data.nasdaq.com/api/v3/datasets/ECONOMIST/BIGMAC_AUS?api_key=MOCK_API_KEY&column_index=3
   response:
     body:
       string: !!binary |
-        H4sIAAAAAAAAA21VyW7bMBT8FYJnW+BO0bd0QZFD2kPSS4vAYCXaIaqtpJQ2KPrvfbREySlqGAHy
-        5s1bZkj6N67taKMb8eE39jU+GK2VonKX48eqrx0+4De3H+5u3h5vPt/jGfsGrAy+f/vp46e72/sH
-        wDrbXvL9Gd3ZCt12tfuF9uhmimOwjbeJ7mIV/DD6voPMhyeHXmf7iGyHfHfqQ2sb1Dobp+BQf0LV
-        FILrqhfkflVPtjs7FOzoIH1EwzAU6HbM2RGNT84H9GybySF7tr6LI7Io+tY3NiAY/7sbU81z39ep
-        YY2iC8++cnEHvYEOY1SwJJCW8Qr0zp9OLvjujIaQMlPj1oZU6Z+JfvZTUyPfDs0LlIK0vnPb+FB6
-        AmEC6uH7DG3TlHUB2gR3Ci4+ufpowRPMCGN7QvdUPhBygC/TheH6SxLa/XRxPNpnCwt9a9wRnEzK
-        A4Xuid5zCkl9A2L/N4mQPRF7TiCp6pup7Y7JuYgPX/G7VAhs6htQ6njZFD/uMAz2Y0rqQ5Mamr5A
-        zvgypJ4PvnXoHpSBAjs8BNf6qcWHk22i2+EGNIdluqlpgBFsF5OzObB09+mg4APf4TjaMG7bXA3q
-        uvq/W6YzDIN/fbW7KLRhRjFh5s/jLuP0oo0oTCm0WMKgxiyZKKQuhSTLh254pglJ6Zqw4NRsfKYI
-        JXLmpXjmccmIyPHyqh+VguorIBM0UZTnuL4iMG3kVTznMy1pufRVWzonQvO1PgBzPi+04GqtIzOB
-        F4YxpnJ9iK8L0FKvi4mtQUkFCLI0hvgqlOZSsAzwjaCoKdUrZLWEgESZASc/e6JKQqVaWlxuxGIh
-        bJDD66kHZwXXbLGWrtbyouTKbFIDkKWAZw92Y9xQZhYeWS3lRaomwCVYk5t5CgIOqsv9AVgxqTkx
-        RlDJFhj8mmEG05Sa6uXvBs+9WaEZB3pJpCqlXmBwSV5WZIXgpVFGaEMpzcVXEwEWjApC4NFmWQmg
-        rr2F0TTZZmhJc3GwKBdnOQbuzK8BLZYjREDmHFK5MWicY+um60NCCyke4aGAG93YIcLDMF/5PsBT
-        l/9Jd/Xy25F+bSTn5M+fv8qSq5mFBgAA
+        H4sIAAAAAAAAA21Vy27bMBD8FYJnW+Cbom/pA0UOaQ9JLy0Cg5Voh6heJaW0QdF/79ISJaeoYRjw
+        7s7O7gxF/ca1HW10Iz78xr7GB6O1UlTucvxY9bXDB/zm9sPdzdvjzed7POe+ASon37/99PHT3e39
+        A+Q6217q/Rnd2QrddrX7hfboZopjsI23Ce5iFfww+r6Dyocnh15X+4hsh3x36kNrG9Q6G6fgUH9C
+        1RSC66oX5H5VT7Y7OxTs6KB8RMMwFOh2zNURjU/OB/Rsm8khe7a+iyOyKPrWNzYgGP+7G1PPc9/X
+        ibBG0YVnX7m4A26AwxgVLAmgZbwCvfOnkwu+O6MhpMpE3NqQOv0z0c9+amrk26F5gVZQ1nduGx9a
+        TyBMQD18n4E2TVkXoE1wp+Dik6uPFjzBjDC2J3xP5QMhB/gyUvCSfklCu58ujkf7bGGhb407gpNJ
+        +RlC95xCUd+A2P8tImRPxJ4TKKr6Zmq7Y3Iu4sNX/C41Apv6BpQ6XjbFjzsMg/2YkvpAUgPpC9SM
+        L0PifPCtQ/egDDTY4SG41k8tPpxsE90ON6A5LNNNTQOIYLuYnM2Bhd2ng4IPfIfjaMO4bXM1qOvq
+        /26ZzjAM/vXV7qKQxFBGlg993F3ydE/0RRtRaMOMYsLMny0/aycKUwotljColWFSl0L+2xbyGSYk
+        pWvBQkvNhmeKUCLnvimecVwyInK8vOKjUlB9lcgATRTlOa6vAEwbeRXP9UxLWi68aivnRGi+9ofE
+        XM8LLbha+8gM4IVhjKncH+LrArTU62JiIyipAEEWYoivQmkuBcsJvgEUNaV6lVktISBRRsCTkT1R
+        JaFSLRQQX+thgxy+ct4IrtliLV2t5UXJldmkXj2FlbWG3RiHA2UWHFkt5UXqJsAlWJObeQoCDqrL
+        8wVpxaTmxBhBJVvS4NecZoURpaZ6+d3S8w6s0IwDvCRSlVIvaXBJXk4xKwQvjTJCG0ppbr6aCGnB
+        qCAELnWWlQDoyi2Mpsk2Q0uam4NFuTnLMXBnvi1osRwhAjLnkMrEoHGOrZuuFw0tpHiEiwSe+MYO
+        ES6O+UroA1yF+U96li/vlvQ2kpyTP3/+Aj8M3rClBgAA
     headers:
       Access-Control-Allow-Credentials:
       - 'true'
@@ -241,15 +247,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '822'
+      - '831'
       Content-Security-Policy:
       - frame-ancestors 'self';
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Mon, 24 Jan 2022 18:27:55 GMT
+      - Thu, 17 Mar 2022 08:55:48 GMT
       ETag:
-      - W/"24d7fd1a832d96feeba80de3265297b5"
+      - W/"1beb9bfdfe766d99306bd6530f064b4d"
       Pragma:
       - no-cache
       Referrer-Policy:
@@ -257,10 +263,10 @@ interactions:
       Server:
       - openresty
       Set-Cookie:
-      - visid_incap_2170999=60n1zTp/Q6eQz+cVdtxwRqrv7mEAAAAAQUIPAAAAAAAnXsLTUbYCcocoS/7HvABO;
-        expires=Tue, 24 Jan 2023 09:00:57 GMT; HttpOnly; path=/; Domain=.nasdaq.com
-      - nlbi_2170999=4JOQN5nmzD6rN2S5Kj7S7QAAAADMfvU76ylbSx9Gtv6G/abt; path=/; Domain=.nasdaq.com
-      - incap_ses_891_2170999=/y+qD+aQr1H+3AM9THhdDKrv7mEAAAAABknbLVGoeNsq6mjIKKB+3w==;
+      - visid_incap_2170999=STsmrKyPQu64aa80lrGQaY/3MmIAAAAAQUIPAAAAAAD11SMD8kekl6hw8oeXxfCY;
+        expires=Fri, 17 Mar 2023 07:06:27 GMT; HttpOnly; path=/; Domain=.nasdaq.com
+      - nlbi_2170999=1CG7X+RnSi2l7k0MKj7S7QAAAAB9M05ZPaUxxuK0FssPICz+; path=/; Domain=.nasdaq.com
+      - incap_ses_1451_2170999=9B3MM+0qzU32ziGeDP0iFJP3MmIAAAAALZuT/Cv6Tp2C2eVwkZDUfA==;
         path=/; Domain=.nasdaq.com
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains; preload
@@ -271,16 +277,16 @@ interactions:
       X-Frame-Options:
       - SAMEORIGIN
       X-Iinfo:
-      - 7-27921314-27921318 NNNY CT(2 12 0) RT(1643048874242 111) q(0 0 0 -1) r(2
-        2) U2
+      - 4-26830307-26830308 NNNY CT(7 19 0) RT(1647507347540 105) q(0 0 0 0) r(1 1)
+        U2
       X-RateLimit-Limit:
       - '50000'
       X-RateLimit-Remaining:
-      - '49994'
+      - '49918'
       X-Request-Id:
-      - 05cbd069-9117-4a4b-9c41-f85639d35e45
+      - 842b17ff-358f-460c-8e1f-e6be5c94cd58
       X-Runtime:
-      - '0.173050'
+      - '0.098494'
       X-XSS-Protection:
       - 1; mode=block
     status:

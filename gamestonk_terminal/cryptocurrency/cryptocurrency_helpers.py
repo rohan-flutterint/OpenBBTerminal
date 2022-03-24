@@ -6,6 +6,7 @@ import os
 import json
 from typing import Tuple, Any, Optional, List
 import difflib
+import logging
 import pandas as pd
 import numpy as np
 from binance.client import Client
@@ -35,6 +36,8 @@ from gamestonk_terminal.config_terminal import theme
 from gamestonk_terminal.cryptocurrency.due_diligence import coinbase_model
 import gamestonk_terminal.config_terminal as cfg
 from gamestonk_terminal.rich_config import console
+
+logger = logging.getLogger(__name__)
 
 INTERVALS = ["1H", "3H", "6H", "1D"]
 
@@ -238,7 +241,7 @@ def _create_closest_match_df(
 # TODO: verify vs, interval, days, depending on source
 def load(
     coin: str,
-    source: str = "cg",
+    source: str = "cp",
     days: int = 60,
     vs: str = "usd",
     interval: str = "1day",
@@ -282,6 +285,10 @@ def load(
 
     if source == "cg":
         coingecko = pycoingecko_model.Coin(coin.lower(), True)
+
+        if not coingecko.symbol:
+            return None, None, None, None, None, None
+
         coin_map_df = coins_map_df.loc[coingecko.symbol]
         coin_map_df = (
             coin_map_df.iloc[0]
@@ -318,6 +325,10 @@ def load(
         paprika_coins = get_list_of_coins()
         paprika_coins_dict = dict(zip(paprika_coins.id, paprika_coins.symbol))
         current_coin, symbol = coinpaprika_model.validate_coin(coin, paprika_coins_dict)
+
+        if not symbol:
+            return None, None, None, None, None, None
+
         coin_map_df = coins_map_df.loc[symbol.lower() if symbol is not None else symbol]
         coin_map_df = (
             coin_map_df.iloc[0]
@@ -634,6 +645,7 @@ def display_all_coins(
     try:
         df = df[skip : skip + top]  # noqa
     except Exception as e:
+        logger.exception(str(e))
         console.print(e)
 
     print_rich_table(
@@ -1014,6 +1026,7 @@ def plot_candles(
         nr_external_axes = 2 if volume else 1
 
         if len(external_axes) != nr_external_axes:
+            logger.error("Expected list of %s axis items.", str(nr_external_axes))
             console.print(
                 f"[red]Expected list of {nr_external_axes} axis items./n[/red]"
             )
@@ -1055,6 +1068,7 @@ def plot_order_book(
         _, ax = plt.subplots(figsize=plot_autoscale(), dpi=PLOT_DPI)
     else:
         if len(external_axes) != 1:
+            logger.error("Expected list of one axis item.")
             console.print("[red]Expected list of one axis item./n[/red]")
             return
         (ax,) = external_axes

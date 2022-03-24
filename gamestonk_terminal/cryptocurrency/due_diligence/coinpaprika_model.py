@@ -306,6 +306,7 @@ def get_tickers_info_for_coin(
             try:
                 tickers[key] = parser.parse(date).strftime("%Y-%m-%d %H:%M:%S")
             except (KeyError, ValueError, TypeError) as e:
+                logger.exception(str(e))
                 console.print(e)
         if key == "quotes":
             try:
@@ -313,6 +314,7 @@ def get_tickers_info_for_coin(
                     tickers[key][quotes]["ath_date"]
                 ).strftime("%Y-%m-%d %H:%M:%S")
             except (KeyError, ValueError, TypeError) as e:
+                logger.exception(str(e))
                 console.print(e)
 
     df = pd.json_normalize(tickers)
@@ -320,6 +322,7 @@ def get_tickers_info_for_coin(
         df.columns = [col.replace("quotes.", "") for col in list(df.columns)]
         df.columns = [col.replace(".", "_").lower() for col in list(df.columns)]
     except KeyError as e:
+        logger.exception(str(e))
         console.print(e)
     df = df.T.reset_index()
     df.columns = ["Metric", "Value"]
@@ -327,7 +330,7 @@ def get_tickers_info_for_coin(
 
 
 @log_start_end(log=logger)
-def validate_coin(coin: str, coins_dct: dict) -> Tuple[str, Optional[Any]]:
+def validate_coin(coin: str, coins_dct: dict) -> Tuple[Optional[Any], Optional[Any]]:
     """Helper method that validates if proper coin id or symbol was provided [Source: CoinPaprika]
 
     Parameters
@@ -354,8 +357,8 @@ def validate_coin(coin: str, coins_dct: dict) -> Tuple[str, Optional[Any]]:
                 symbol = value
 
     if not coin_found:
-        raise ValueError(f"Could not find coin with given id: {coin}\n")
-    # console.print(f"Coin found : {coin_found} with symbol {symbol}\n")
+        console.print(f"[red]Could not find coin with given id: {coin}\n[/red]")
+        return None, None
     return coin_found, symbol
 
 

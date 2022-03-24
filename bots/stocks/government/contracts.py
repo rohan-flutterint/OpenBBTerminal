@@ -1,21 +1,29 @@
+import io
+import logging
+from typing import Union
+
 import pandas as pd
 from matplotlib import pyplot as plt
 
 import bots.config_discordbot as cfg
-from bots.config_discordbot import logger
-from bots.helpers import image_border
+from bots import helpers
 from gamestonk_terminal.config_plot import PLOT_DPI
+from gamestonk_terminal.decorators import log_start_end
 from gamestonk_terminal.helper_funcs import plot_autoscale
 from gamestonk_terminal.stocks.government import quiverquant_model
 
+logger = logging.getLogger(__name__)
 
+
+@log_start_end(log=logger)
 def contracts_command(
-    ticker: str = "", past_transaction_days: int = 10, raw: bool = False
+    ticker: str = "", past_transaction_days: Union[int, str] = 10, raw: bool = False
 ):
     """Displays contracts associated with tickers [quiverquant.com]"""
+    past_transaction_days = int(past_transaction_days)
     # Debug user input
     if cfg.DEBUG:
-        logger.debug("gov-contracts %s %s %s", ticker, past_transaction_days, raw)
+        logger.debug("gov contracts %s %s %s", ticker, past_transaction_days, raw)
 
     if ticker == "":
         raise Exception("A ticker is required")
@@ -24,7 +32,10 @@ def contracts_command(
     df_contracts = quiverquant_model.get_government_trading("contracts", ticker)
 
     if df_contracts.empty:
-        raise Exception("No government contracts found")
+        return {
+            "title": f"Stocks: [quiverquant.com] Contracts by {ticker}",
+            "description": f"{ticker} does not have any contracts",
+        }
 
     # Output Data
     df_contracts["Date"] = pd.to_datetime(df_contracts["Date"]).dt.date
@@ -42,10 +53,13 @@ def contracts_command(
     ax.set_title(f"Sum of latest government contracts to {ticker}")
     fig.tight_layout()
 
-    plt.savefig("gov_contracts.png")
     imagefile = "gov_contracts.png"
+    dataBytesIO = io.BytesIO()
+    plt.savefig(dataBytesIO)
 
-    imagefile = image_border(imagefile)
+    dataBytesIO.seek(0)
+    imagefile = helpers.image_border(imagefile, base64=dataBytesIO)
+
     return {
         "title": f"Stocks: [quiverquant.com] Contracts by {ticker}",
         "imagefile": imagefile,
